@@ -67,12 +67,14 @@ uv sync --extra level1 --extra level2   # 必要なものだけ選ぶ場合
 
 - extra: `level1`（pdfplumber / pypdfium2）、`pymupdf`、`camelot`、`markitdown`、`unstructured`、`level2`（Docling）、
   `level2-paddle`（PP-StructureV3）、`level2-marker`、`level2-mineru`。torch は CPU 版を `pyproject.toml` で固定しています
+- `--all-extras` を選ぶと PyMuPDF・PP-StructureV3・Marker・MinerU などオプトインの extra もまとめて入りますが、
+  Marker・MinerU・YomiToku はさらに `JDOCBENCH_MARKER=1` 等の環境変数を立てないと動きません（上の「アダプタ」表を参照）
 - 導入は uv だけを前提にしています（cv2 の提供元を揃える override などが uv 専用のため）
 - Level 2 のモデルは初回実行時に取得します（Docling 約 500MB は `HF_HOME`、PP-StructureV3 約 770MB は
   `PADDLE_PDX_CACHE_HOME`、MinerU 約 820MB は `MINERU_MODEL_BASE_DIR`）
 - 外部コマンド（無ければ該当アダプタはスキップ）
   - poppler-utils（pdftotext / pdfinfo）: `sudo apt install poppler-utils` / `sudo dnf install poppler-utils`
-  - pdf2json: `npm install -g pdf2json`（Node.js 22 以上）
+  - pdf2json: `npm install -g pdf2json`（Node.js 22 以上。CI は `4.1.0` 固定）
   - mutool: `sudo apt install mupdf-tools`
   - Tesseract: `sudo apt install tesseract-ocr tesseract-ocr-jpn` / `sudo dnf install tesseract tesseract-langpack-jpn`
 - Tika / Tabula: JDK 11 以上を入れ、`bash scripts/fetch_java_jars.sh` で版とチェックサムを固定した jar を
@@ -120,8 +122,9 @@ seed を PDF と照合して人手で直したものを正とします。`ground
 uv run ruff check . && uv run ruff format --check . && uv run pytest
 ```
 
-実 PDF を使うテストは、PDF の置き場所を `JDOCBENCH_SAMPLES` で渡したときだけ動きます。渡さない場合や、
-対象の PDF・外部コマンドが無い場合は skip します。
+実 PDF を使うテストは、`JDOCBENCH_SAMPLES` が未設定ならリポジトリ直下の `samples/` を探します。
+見つからない場合や、対象の PDF・外部コマンドが無い場合は skip します。別の場所を使うときだけ
+環境変数で渡してください。
 
 ```bash
 JDOCBENCH_SAMPLES=/path/to/samples uv run pytest
@@ -145,4 +148,5 @@ JDOCBENCH_SAMPLES=/path/to/samples uv run pytest
 
 ---
 
-コード中のコメントにある `#NNN` は、開発リポジトリ（非公開）の Issue 番号です。
+コード中のコメントにある `#NNN` は、開発リポジトリ（非公開）の Issue 番号です。同様に、コード・docs 中の
+「企画書 §NN」や `docs/results.md` 等への言及も、開発リポジトリ（非公開）の文書を指します。
