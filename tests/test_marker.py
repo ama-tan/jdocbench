@@ -7,6 +7,7 @@ import sys
 from pathlib import Path
 
 import pytest
+from _samples import SAMPLES
 
 from jdocbench.adapters import ADAPTERS
 from jdocbench.adapters import marker as marker_adapter
@@ -16,7 +17,6 @@ from jdocbench.normalizers._html_table import table_rows
 from jdocbench.normalizers.marker import normalize as normalize_marker
 from jdocbench.perf import run_command
 
-_SAMPLES = Path(__file__).resolve().parents[1] / "samples"
 _OPT_IN_ENV = "JDOCBENCH_MARKER"
 
 
@@ -271,7 +271,7 @@ def test_run_raises_when_child_fails(tmp_path: Path, monkeypatch: pytest.MonkeyP
     monkeypatch.setattr(marker_adapter, "run_command", fake_run_command)
     out_dir = tmp_path / "raw" / "marker"
     with pytest.raises(subprocess.CalledProcessError):
-        MarkerAdapter().run(_SAMPLES / "dummy.pdf", out_dir)
+        MarkerAdapter().run(SAMPLES / "dummy.pdf", out_dir)
     assert not (out_dir / "peak_rss.json").exists()
 
 
@@ -283,7 +283,7 @@ def test_run_raises_when_child_fails(tmp_path: Path, monkeypatch: pytest.MonkeyP
     importlib.util.find_spec("marker") is None, reason="marker が無い環境ではスキップ"
 )
 def test_marker_writes_raw_output_and_stops_server(tmp_path: Path) -> None:
-    pdf = _SAMPLES / "stat-go-jp-children-population-2026.pdf"
+    pdf = SAMPLES / "stat-go-jp-children-population-2026.pdf"
     if not pdf.is_file():
         pytest.skip("samples/ に対象 PDF が無い")
 

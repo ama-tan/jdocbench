@@ -5,13 +5,12 @@ from pathlib import Path
 from types import SimpleNamespace
 
 import pytest
+from _samples import SAMPLES
 
 from jdocbench.adapters import ADAPTERS
 from jdocbench.adapters.camelot import CamelotAdapter, CamelotStreamAdapter, _table_record
 from jdocbench.normalizers import NORMALIZERS
 from jdocbench.normalizers.camelot import normalize
-
-_SAMPLES = Path(__file__).resolve().parents[1] / "samples"
 
 _needs_camelot = pytest.mark.skipif(
     importlib.util.find_spec("camelot") is None,
@@ -88,7 +87,7 @@ def test_version_is_unknown_without_camelot(monkeypatch: pytest.MonkeyPatch) -> 
 
 @_needs_camelot
 def test_camelot_writes_raw_tables(tmp_path: Path) -> None:
-    pdf = _SAMPLES / "geps-manual-internet-excerpt.pdf"
+    pdf = SAMPLES / "geps-manual-internet-excerpt.pdf"
     if not pdf.is_file():
         pytest.skip("samples/geps-manual-internet-excerpt.pdf が無い")
 
@@ -118,7 +117,7 @@ def test_camelot_writes_raw_tables(tmp_path: Path) -> None:
 @_needs_camelot
 def test_camelot_does_not_fall_back_to_stream(tmp_path: Path) -> None:
     """罫線の無い文書（2 段組み論文）では lattice のまま 0 表になる（stream に切り替えない）。"""
-    pdf = _SAMPLES / "jacn-29-0039-katakana-transliteration-2025.pdf"
+    pdf = SAMPLES / "jacn-29-0039-katakana-transliteration-2025.pdf"
     if not pdf.is_file():
         pytest.skip("samples/jacn-29-0039-katakana-transliteration-2025.pdf が無い")
 
@@ -135,7 +134,7 @@ def test_camelot_does_not_fall_back_to_stream(tmp_path: Path) -> None:
 @_needs_camelot
 def test_camelot_stream_writes_raw_tables(tmp_path: Path) -> None:
     """stream 固定。罫線の無い文書でも、空白の並びから表（本文を含む）を推定する。"""
-    pdf = _SAMPLES / "jacn-29-0039-katakana-transliteration-2025.pdf"
+    pdf = SAMPLES / "jacn-29-0039-katakana-transliteration-2025.pdf"
     if not pdf.is_file():
         pytest.skip("samples/jacn-29-0039-katakana-transliteration-2025.pdf が無い")
 

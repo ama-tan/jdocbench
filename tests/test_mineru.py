@@ -5,13 +5,13 @@ import os
 from pathlib import Path
 
 import pytest
+from _samples import SAMPLES
 
 from jdocbench.adapters import ADAPTERS
 from jdocbench.adapters.mineru import MineruAdapter, _env
 from jdocbench.normalizers import NORMALIZERS
 from jdocbench.normalizers.mineru import normalize
 
-_SAMPLES = Path(__file__).resolve().parents[1] / "samples"
 _OPT_IN_ENV = "JDOCBENCH_MINERU"
 
 
@@ -201,7 +201,7 @@ def test_normalize_skips_broken_items(tmp_path: Path) -> None:
 )
 def test_mineru_writes_raw_output(tmp_path: Path) -> None:
     # 表を 4 つ含みスパイク（#195）で実測済みの文書を使う
-    pdf = _SAMPLES / "stat-go-jp-children-population-2026.pdf"
+    pdf = SAMPLES / "stat-go-jp-children-population-2026.pdf"
     if not pdf.is_file():
         pytest.skip("samples/ に対象 PDF が無い")
 

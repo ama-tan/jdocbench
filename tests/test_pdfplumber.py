@@ -4,12 +4,11 @@ import json
 from pathlib import Path
 
 import pytest
+from _samples import SAMPLES
 
 from jdocbench.adapters.pdfplumber import PdfplumberAdapter
 from jdocbench.normalizers._tables import drop_table_content_lines
 from jdocbench.normalizers.pdfplumber import normalize
-
-_SAMPLES = Path(__file__).resolve().parents[1] / "samples"
 
 
 def test_available_follows_find_spec(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -30,7 +29,7 @@ def test_version_is_unknown_without_pdfplumber(monkeypatch: pytest.MonkeyPatch) 
     reason="pdfplumber が無い環境ではスキップ",
 )
 def test_pdfplumber_writes_raw_output(tmp_path: Path) -> None:
-    pdfs = sorted(_SAMPLES.glob("*.pdf"))
+    pdfs = sorted(SAMPLES.glob("*.pdf"))
     if not pdfs:
         pytest.skip("samples/ に PDF が無い")
 
@@ -77,7 +76,7 @@ def test_pdfplumber_writes_raw_output(tmp_path: Path) -> None:
 )
 def test_pdfplumber_strips_table_part_of_a_joined_line_in_a_real_pdf(tmp_path: Path) -> None:
     """stat の p2 で本文と表の行が 1 行に連結された段落から、表の値だけを除く（#199）。"""
-    pdf = _SAMPLES / "stat-go-jp-children-population-2026.pdf"
+    pdf = SAMPLES / "stat-go-jp-children-population-2026.pdf"
     if not pdf.is_file():
         pytest.skip("samples/ に stat の PDF が無い")
 

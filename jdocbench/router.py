@@ -7,11 +7,12 @@ Document Profile（`jdocbench.profile.profile_pdf` の結果。profile.json の 
 - `cost`: コスト重視。Level 1（Classical）で足りる特性ならそれ。Level 1 が実測で崩れる特性
   （スキャン・2 段組み）のときだけ重いものへ上げる
 
-分岐に使う特性は docs/router.md の 4 特性（`text_layer` / `columns` / `ruled_pages` /
-`nonembedded_cjk_font_pages`）に限る（スキャンの判定だけ `chars_per_page` で補う）。
-n=7 のため、1 文書の癖だけに合う分岐は作らない。
-各分岐の根拠（文書と数値）は docs/results.md（CI run 37117313639、`ci-results-full`）と
-docs/router.md による。決定木と 7 文書の推奨は docs/router.md「Router 初版（ルール）」を参照。
+分岐に使う特性は結果側リポジトリ（ama-tan/jdoc-bench、非公開）の docs/router.md の
+4 特性（`text_layer` / `columns` / `ruled_pages` / `nonembedded_cjk_font_pages`）に限る
+（スキャンの判定だけ `chars_per_page` で補う）。n=7 のため、1 文書の癖だけに合う分岐は作らない。
+各分岐の根拠（文書と数値）は結果側リポジトリの docs/results.md（CI run 37117313639、
+`ci-results-full`）と docs/router.md による。決定木と 7 文書の推奨は結果側リポジトリの
+docs/router.md「Router 初版（ルール）」を参照。
 
 推奨は利用可能性を考慮しない（パーサー名を返すだけで、実行は別）。PP-Structure のような
 オプトインのアダプタも推奨に出す。
@@ -76,8 +77,8 @@ def route(profile: dict, mode: str, fonts_ja: list[str] | None = None) -> dict:
     調べられなければ None）。
     cost モードの C3 でだけ使い、空リスト（無いと確かめた）のときだけ Level 1 に回す。
     戻り値は `{"mode", "parser", "fallbacks", "reasons", "rule"}`。`rule` は通った分岐の ID
-    （docs/router.md の決定木と対応）。Profile に `error` がある・特性が欠けている場合は
-    安全側の既定（rule `default-error`）を返す。
+    （結果側リポジトリ（ama-tan/jdoc-bench、非公開）の docs/router.md の決定木と対応）。
+    Profile に `error` がある・特性が欠けている場合は安全側の既定（rule `default-error`）を返す。
     """
     if mode not in MODES:
         raise ValueError(f"unknown mode: {mode!r}（{' / '.join(MODES)}）")

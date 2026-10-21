@@ -5,11 +5,11 @@ import os
 from pathlib import Path
 
 import pytest
+from _samples import SAMPLES
 
 from jdocbench.adapters.ppstructure import PpStructureAdapter
 from jdocbench.normalizers.ppstructure import normalize as normalize_ppstructure
 
-_SAMPLES = Path(__file__).resolve().parents[1] / "samples"
 _OPT_IN_ENV = "JDOCBENCH_PPSTRUCTURE"
 
 
@@ -50,7 +50,7 @@ def test_version_is_unknown_without_paddleocr(monkeypatch: pytest.MonkeyPatch) -
 )
 def test_ppstructure_writes_raw_output(tmp_path: Path) -> None:
     # 表を 4 つ含みスパイク（#92）で実測済みの文書を使う
-    pdf = _SAMPLES / "stat-go-jp-children-population-2026.pdf"
+    pdf = SAMPLES / "stat-go-jp-children-population-2026.pdf"
     if not pdf.is_file():
         pytest.skip("samples/ に対象 PDF が無い")
 
