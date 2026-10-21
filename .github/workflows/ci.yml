@@ -1,0 +1,71 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+# 同一 ref で新しい実行が始まったら、古い実行はキャンセルする
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  # lint / format / test だけを速く回す。実測値の正は元リポジトリ（ama-tan/jdoc-bench）の CI（#190）
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # samples/ や groundtruth/ が誤って公開側に混ざっていないかを確認する（非公開データの流出ガード）。
+      # .gitignore で追跡対象には入らない想定だが、force add 等で紛れ込んだ場合に検出して落とす
+      - name: 非公開データの流出ガードを確認
+        run: |
+          leaked=$(git ls-files | grep -E '\.pdf$|^groundtruth/|^samples/' || true)
+          if [ -n "$leaked" ]; then
+            echo "非公開データ（PDF / groundtruth / samples）が追跡されています:"
+            echo "$leaked"
+            exit 1
+          fi
+
+      # Level 0 パーサー（外部コマンド）。アダプタは available() で有無を自己申告するため、
+      # 無くても lint / test は通るが、実 PDF のテストを CI で走らせるためにここで入れる。
+      # tesseract-ocr-jpn は Tesseract（tesseract / tesseract_psm6 アダプタ）の日本語の学習データ（#196）。
+      # fonts-noto-cjk は埋め込みの無い日本語フォントの代替先。Ubuntu ランナーには日本語フォントが無く、
+      # ページ画像の日本語が空白になって Docling のレイアウト推論が変わる（#157）
+      - name: poppler-utils・mupdf-tools・Tesseract（jpn）と日本語フォントをインストール
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq poppler-utils mupdf-tools fonts-noto-cjk tesseract-ocr tesseract-ocr-jpn
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: pdf2json をインストール
+        run: npm install -g pdf2json@4.1.0
+
+      - name: ツールのバージョンを表示
+        run: |
+          pdftotext -v 2>&1 | head -1
+          pdf2json --version 2>&1 | head -1
+          tesseract --version 2>&1 | head -1
+          tesseract --list-langs 2>&1 | grep -x jpn
+
+      - uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+
+      # uv.lock どおりに環境を再現する（lock がずれていれば失敗させる）
+      - name: 依存関係のインストール
+        run: uv sync --frozen --all-extras
+
+      - name: Lint
+        run: uv run ruff check .
+
+      - name: フォーマット確認
+        run: uv run ruff format --check .
+
+      - name: テスト
+        run: uv run pytest
