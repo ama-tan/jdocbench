@@ -1,0 +1,143 @@
+[project]
+name = "jdocbench"
+version = "0.1.0"
+description = "日本語実務文書のドキュメントパーサを評価するベンチマーク"
+readme = "README.md"
+requires-python = ">=3.12"
+license = { file = "LICENSE" }
+dependencies = ["rapidfuzz>=3.9"]
+
+# Level 1 アダプタ（Python ライブラリ）。既定の依存には入れず `uv sync --all-extras` で入れる
+# pypdfium2（Apache-2.0 / BSD-3-Clause）は Level 0 の `pypdfium2` アダプタ用。pdfplumber の依存でも
+# 入るが、アダプタが直接使うので明示する
+[project.optional-dependencies]
+level1 = ["pdfplumber>=0.11", "pypdfium2>=4.0"]
+# PyMuPDF は AGPL-3.0 / Artifex 商用のデュアルライセンス。MIT の本体と異なるため level1 には含めず、
+# 明示的に `uv sync --extra pymupdf`（または `--all-extras`）を選んだときだけ入る extra にする
+pymupdf = ["pymupdf>=1.24"]
+# Camelot（MIT）は表抽出専業。opencv-headless と pandas を引き venv が約 300MB 増えるため、
+# pymupdf と同じく level1 には含めず明示的に選んだときだけ入る extra にする
+# opencv-contrib-python は cv2 の提供元を 1 つに揃えるための直接指定（下の [tool.uv] を参照）
+camelot = ["camelot-py>=2.0", "opencv-contrib-python>=4.7.0.68"]
+# 変換ツール系（PDF → Markdown / 要素。LLM の前処理で広く使われる）。外部 API 連携の機能は使わない
+# MarkItDown（MIT）の pdf extra は pdfminer.six / pdfplumber を引く
+markitdown = ["markitdown[pdf]>=0.1.8"]
+# Unstructured（Apache-2.0）。unstructured[pdf] は OCR 用の google-cloud-vision / pytesseract まで引くため使わず、
+# partition_pdf に要る依存を直接並べる。strategy="fast"（pdfminer ベース）でも unstructured.partition.pdf が
+# unstructured-inference をモジュールの先頭で import するため、unstructured-inference（torch / timm を引く）は外せない。
+# torch / torchvision は level2 と同じく CPU 版を指すようここに明示する（[tool.uv.sources] は直接の依存にしか効かない）。
+# unstructured-inference が要求する opencv-python は下の override で無効にし、cv2 は opencv-contrib-python に揃える
+unstructured = [
+    "unstructured>=0.27",
+    "unstructured-inference>=1.6",
+    "pdfminer-six>=20251230",
+    "pypdf>=6.9.1",
+    "pikepdf>=10.3.0",
+    "pdf2image>=1.17.0",
+    "pi-heif>=1.2.0",
+    "torch",
+    "torchvision",
+    "opencv-contrib-python>=4.7.0.68",
+]
+# Level 2 アダプタ（Document AI）。torch を引くため既定には入れず extra にする。
+# torch / torchvision は docling の推移的依存だが、下の [tool.uv.sources] は直接の依存に
+# しか効かないため、CPU 版を指すようここに明示する
+# onnxruntime（MIT）は docling_ocr が使う RapidOCR の ONNX バックエンド。torch より軽く
+# OCR だけを回せるため入れる（rapidocr 本体は docling の依存で既に入る）
+# opencv-contrib-python は camelot と同じく cv2 の提供元を揃えるための直接指定
+level2 = [
+    "docling>=2.0",
+    "torch",
+    "torchvision",
+    "onnxruntime",
+    "opencv-contrib-python>=4.7.0.68",
+]
+# Level 2 アダプタ（PP-StructureV3）。paddle は torch と別系統のランタイムなので extra も分ける
+# （どちらか一方だけを入れた検証ができるようにする）。paddlepaddle は PyPI 既定が CPU 版
+level2-paddle = ["paddleocr>=3.7", "paddlepaddle>=3.0", "paddlex[ocr]>=3.7"]
+# Level 2 アダプタ（Marker 2.0.0 の VLM を使わないモード。#194）。コードは Apache-2.0 だが、
+# 自動取得されるモデルの重みは modified AI Pubs Open RAIL-M（研究・個人・年商/調達 $5M 未満のみ無償）で
+# MIT の本体と条件が異なるため、他の extra とは分けて明示的に選んだときだけ入れる（docs/licenses.md）。
+# marker-pdf は anthropic / openai / google-genai を必須依存に持つ（--use_llm 用）が、アダプタは
+# --use_llm を使わず外部 API は呼ばない（企画書 §54-1）。torch / torchvision は level2 と同じく CPU 版
+level2-marker = ["marker-pdf==2.0.0", "torch", "torchvision"]
+# Level 2 アダプタ（MinerU の basic tier。ONNX Runtime で動き torch は引かない）。
+# MinerU のコードは Apache-2.0 に追加条項（月間アクティブユーザー 1 億超または月間売上 2,000 万ドル超の
+# 利用者は別途商用ライセンスが要る、オンラインサービスで使う場合は MinerU の利用を表示する）を付けた
+# 独自ライセンス（MinerU Open Source License）。MIT の本体と異なるため PyMuPDF と同じく独立した extra にし、
+# アダプタも環境変数 JDOCBENCH_MINERU=1 を設定したときだけ動かす（docs/spikes/mineru.md）
+level2-mineru = ["mineru>=4.0.12"]
+
+# PyPI の既定の torch は CUDA 版で venv が 6GB 近くになるため、CPU 版のみを配る
+# PyTorch 公式 index から取る（本プロジェクトは GPU を使わない）
+[[tool.uv.index]]
+name = "pytorch-cpu"
+url = "https://download.pytorch.org/whl/cpu"
+explicit = true
+
+# cv2 を提供する配布パッケージを opencv-contrib-python の 1 つに揃える（#171）。
+# 依存先がそれぞれ別の配布パッケージを要求する: camelot-py → opencv-python-headless、
+# rapidocr（docling 経由）→ opencv-python、paddlex[ocr] → opencv-contrib-python==4.10.0.84。
+# 3 つとも同じ site-packages/cv2/ にファイルを置くため、インストール順しだいで版の混ざった cv2 になり
+# `partially initialized module 'cv2'` で import が壊れることがあった。
+# - override-dependencies は同名の要求をすべて置き換える。成り立たないマーカーを付けた override で
+#   opencv-python / opencv-python-headless への要求を無効にし、cv2 を必要とする extra
+#   （camelot / level2）は opencv-contrib-python を直接要求する（level2-paddle は paddlex 経由で入る）
+# - contrib 版を選ぶ理由: paddlex は PP-StructureV3 の生成時に「opencv-contrib-python」という
+#   配布パッケージ名がインストール済みかを importlib.metadata で確かめ、無ければ DependencyError で
+#   止まる（paddlex/utils/deps.py の require_extra）。headless 版に寄せると cv2 は動いても
+#   PP-StructureV3 が起動しない。contrib 版は cv2 の基本機能を含むので camelot / rapidocr も動く
+# - paddlex の ==4.10.0.84 固定も override で外し、cv2 は 5.x に揃える（camelot / rapidocr が
+#   要求していた 5.0.0.93 に合わせる。旧 lock の環境でも import される cv2 本体は 5.0 だった）
+# - override は uv だけが解釈する。pip で camelot / level2 を入れると opencv-python 等と
+#   contrib 版が並んで入り同じ衝突が起きる。本プロジェクトの導入手順は uv のみ（torch の CPU 版の
+#   指定も [tool.uv.sources] で uv 専用）なので、pip での導入は対象外とする
+# - 既存の venv を更新すると、外れたパッケージのアンインストールで共有の cv2/ が消えることがある。
+#   そのときは `uv sync --all-extras --reinstall-package opencv-contrib-python` で入れ直す
+#   （CI は毎回新規なので不要）
+# - [tool.uv] conflicts は「同時に入れない extra」を宣言する仕組みで、--all-extras で全部を
+#   同時に入れる本件には使えない
+#
+# pillow / pypdfium2 も override で範囲を固定する（#194）。marker-pdf 2.0.0 は pillow<11、
+# その依存の pdftext は pypdfium2==5.10.1 を要求し、そのままでは level2-marker を足しただけで
+# 他のアダプタ（pdfplumber / docling / ppstructure）の pillow 12 → 10、pypdfium2 5.13 → 5.10、
+# pdfplumber 0.11.10 → 0.11.9 が巻き戻り、既存パーサーの実測値が変わりうる。既存の版を保ち、
+# marker 側を要求範囲の外（pillow 12 / pypdfium2 5.13）で動かす。marker は surya の
+# opencv-python-headless==4.11 固定も上の override で外れており（cv2 5.x）、それと同じ扱い。
+# 開発機で、marker の出力（本文・表の抜粋、表の数、メモリ）がスパイク（要求どおりの版で計測、
+# docs/spikes/marker.md）の記録と一致することを確認した
+[tool.uv]
+override-dependencies = [
+    "opencv-python; sys_platform == 'never'",
+    "opencv-python-headless; sys_platform == 'never'",
+    "opencv-contrib-python>=4.7.0.68",
+    "pillow>=12,<13",
+    "pypdfium2>=5.13,<6",
+]
+
+[tool.uv.sources]
+torch = { index = "pytorch-cpu" }
+torchvision = { index = "pytorch-cpu" }
+
+[project.scripts]
+jdocbench = "jdocbench.cli:main"
+
+[dependency-groups]
+dev = [
+    "pytest>=8.0",
+    "ruff>=0.14",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["jdocbench"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]

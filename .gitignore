@@ -1,0 +1,16 @@
+# Python
+__pycache__/
+*.pyc
+.venv/
+dist/
+build/
+*.egg-info/
+
+# ツールのキャッシュ
+.pytest_cache/
+.ruff_cache/
+
+# ベンチマークの実行結果と、非公開のデータ（公開リポジトリには含めない）
+results/
+samples/
+groundtruth/
