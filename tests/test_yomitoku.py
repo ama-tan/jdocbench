@@ -7,6 +7,7 @@ import sys
 from pathlib import Path
 
 import pytest
+from _samples import SAMPLES
 
 from jdocbench.adapters import ADAPTERS
 from jdocbench.adapters import yomitoku as yomitoku_adapter
@@ -15,7 +16,6 @@ from jdocbench.normalizers import NORMALIZERS
 from jdocbench.normalizers.yomitoku import normalize
 from jdocbench.perf import CommandResult
 
-_SAMPLES = Path(__file__).resolve().parents[1] / "samples"
 _OPT_IN_ENV = "JDOCBENCH_YOMITOKU"
 _BIN_ENV = "JDOCBENCH_YOMITOKU_BIN"
 _SCALE = 72 / 200
@@ -202,10 +202,18 @@ def test_page_count_uses_tool_interpreter(tmp_path: Path) -> None:
 
     本体の venv の pypdfium2 は extra にしか無いため、本体側では import しない。
     ここでは shebang をテストを動かしている Python に向けて代わりにする。
+    実 PDF（samples/）に頼らず、3 ページの PDF をその場で作る。
     """
-    pages, version = yomitoku_adapter._page_count(
-        str(_executable(tmp_path)), _SAMPLES / "mof-budget-summary-fy2026.pdf"
-    )
+    import pypdfium2 as pdfium
+
+    pdf = tmp_path / "three.pdf"
+    document = pdfium.PdfDocument.new()
+    for _ in range(3):
+        document.new_page(595, 842)
+    document.save(pdf)
+    document.close()
+
+    pages, version = yomitoku_adapter._page_count(str(_executable(tmp_path)), pdf)
     assert pages == 3
     assert version == importlib.metadata.version("pypdfium2")
 
@@ -576,7 +584,9 @@ def test_normalize_falls_back_to_paragraph_rule_without_words(tmp_path: Path) ->
     ),
 )
 def test_yomitoku_real_pdf(tmp_path: Path) -> None:
-    pdf = _SAMPLES / "mof-budget-summary-fy2026.pdf"
+    pdf = SAMPLES / "mof-budget-summary-fy2026.pdf"
+    if not pdf.is_file():
+        pytest.skip("samples/mof-budget-summary-fy2026.pdf が無い")
     adapter = YomitokuAdapter()
     out_dir = tmp_path / "raw" / "yomitoku"
     result = adapter.run(pdf, out_dir)

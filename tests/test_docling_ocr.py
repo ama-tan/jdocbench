@@ -7,12 +7,12 @@ import types
 from pathlib import Path
 
 import pytest
+from _samples import SAMPLES
 
 from jdocbench.adapters.docling_ocr import DoclingOcrAdapter, _pipeline_options
 from jdocbench.normalizers import NORMALIZERS
 
-_SAMPLES = Path(__file__).resolve().parents[1] / "samples"
-_ALL_SAMPLE_PDFS = sorted(_SAMPLES.glob("*.pdf"))
+_ALL_SAMPLE_PDFS = sorted(SAMPLES.glob("*.pdf"))
 
 
 def test_available_follows_find_spec(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -44,7 +44,7 @@ def test_pipeline_options_batch_one_page() -> None:
 )
 def test_text_layer_pdf_is_skipped(tmp_path: Path) -> None:
     """テキスト層のある PDF では OCR を走らせず skipped を返す（docling が無くても通る）。"""
-    pdf = _SAMPLES / "stat-go-jp-children-population-2026.pdf"
+    pdf = SAMPLES / "stat-go-jp-children-population-2026.pdf"
     if not pdf.is_file():
         pytest.skip("samples/ に対象 PDF が無い")
 
@@ -64,7 +64,7 @@ def test_scan_pdf_is_not_skipped_by_text_layer_check() -> None:
     """スキャン相当サンプルはテキスト層なしと判定される（OCR 自体は走らせない）。"""
     from jdocbench.adapters.docling_ocr import _TEXT_LAYER_MIN_CHARS, _text_layer_chars
 
-    pdf = _SAMPLES / "stat-go-jp-children-population-2026-scan.pdf"
+    pdf = SAMPLES / "stat-go-jp-children-population-2026-scan.pdf"
     if not pdf.is_file():
         pytest.skip("samples/ に対象 PDF が無い")
 
@@ -137,7 +137,7 @@ def test_text_layer_chars_counts_supplementary_plane_characters(
     reason="OCR は重いので JDOCBENCH_OCR_TEST を設定した環境でのみ実行する",
 )
 def test_docling_ocr_writes_raw_output(tmp_path: Path) -> None:
-    pdf = _SAMPLES / "stat-go-jp-children-population-2026-scan.pdf"
+    pdf = SAMPLES / "stat-go-jp-children-population-2026-scan.pdf"
     if not pdf.is_file():
         pytest.skip("samples/ に対象 PDF が無い")
 

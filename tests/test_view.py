@@ -3,10 +3,10 @@ import importlib.util
 from pathlib import Path
 
 import pytest
+from _samples import SAMPLES
 
 from jdocbench.view import render, render_pages
 
-_SAMPLES = Path(__file__).resolve().parents[1] / "samples"
 _SAMPLE_PDF_NAME = "stat-go-jp-children-population-2026.pdf"
 _SAMPLE_PAGES = 6
 
@@ -96,7 +96,7 @@ def test_render_uses_document_pages_when_images_are_missing() -> None:
     importlib.util.find_spec("pypdfium2") is None, reason="pypdfium2 が無い環境ではスキップ"
 )
 def test_render_pages_writes_png_per_page(tmp_path: Path) -> None:
-    pdf = _SAMPLES / _SAMPLE_PDF_NAME
+    pdf = SAMPLES / _SAMPLE_PDF_NAME
     if not pdf.exists():
         pytest.skip("samples/ に対象 PDF が無い")
 

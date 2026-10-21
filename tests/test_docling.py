@@ -4,11 +4,10 @@ import json
 from pathlib import Path
 
 import pytest
+from _samples import SAMPLES
 
 from jdocbench.adapters.docling import DoclingAdapter, _pipeline_options
 from jdocbench.normalizers.docling import normalize
-
-_SAMPLES = Path(__file__).resolve().parents[1] / "samples"
 
 
 def test_available_follows_find_spec(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -43,7 +42,7 @@ def test_pipeline_options_batch_one_page() -> None:
 )
 def test_docling_writes_raw_output(tmp_path: Path) -> None:
     # 表を 4 つ含み事前調査で実測済みの文書を使う（他のサンプルは実行時間が読めない）
-    pdf = _SAMPLES / "stat-go-jp-children-population-2026.pdf"
+    pdf = SAMPLES / "stat-go-jp-children-population-2026.pdf"
     if not pdf.is_file():
         pytest.skip("samples/ に対象 PDF が無い")
 

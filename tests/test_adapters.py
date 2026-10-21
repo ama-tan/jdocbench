@@ -4,6 +4,7 @@ import subprocess
 from pathlib import Path
 
 import pytest
+from _samples import SAMPLES
 
 from jdocbench.adapters.pdftotext import PdftotextAdapter, parse_version
 from jdocbench.cli import _run_one
@@ -11,7 +12,6 @@ from jdocbench.ir import Block, Document, Page
 from jdocbench.metrics import JNF_CLASSES, JNF_VERSION
 
 _DUMMY_PDF = b"%PDF-1.4\n"
-_SAMPLES = Path(__file__).resolve().parents[1] / "samples"
 
 
 class FakeAdapter:
@@ -275,7 +275,7 @@ def test_parse_version(stderr: str, expected: str) -> None:
 
 @pytest.mark.skipif(shutil.which("pdftotext") is None, reason="pdftotext が無い環境ではスキップ")
 def test_pdftotext_extracts_text(tmp_path: Path) -> None:
-    pdf = _SAMPLES / "stat-go-jp-children-population-2026.pdf"
+    pdf = SAMPLES / "stat-go-jp-children-population-2026.pdf"
     if not pdf.exists():
         pytest.skip("samples/ に対象 PDF が無い")
     out = tmp_path / "results"
