@@ -21,13 +21,24 @@ jobs:
       - uses: actions/checkout@v4
 
       # samples/ や groundtruth/ が誤って公開側に混ざっていないかを確認する（非公開データの流出ガード）。
-      # .gitignore で追跡対象には入らない想定だが、force add 等で紛れ込んだ場合に検出して落とす
+      # .gitignore で追跡対象には入らない想定だが、force add 等で紛れ込んだ場合に検出して落とす。
+      # 階層の深さに関わらず検出するため (^|/) で判定し、大文字拡張子（.PDF 等）も拾う
       - name: 非公開データの流出ガードを確認
         run: |
-          leaked=$(git ls-files | grep -E '\.pdf$|^groundtruth/|^samples/' || true)
+          leaked=$(git ls-files | grep -iE '\.(pdf|docx|pptx|xlsx)$|(^|/)(samples|groundtruth|results)/' || true)
           if [ -n "$leaked" ]; then
-            echo "非公開データ（PDF / groundtruth / samples）が追跡されています:"
+            echo "非公開データ（PDF/DOCX/PPTX/XLSX や samples/groundtruth/results 配下）が追跡されています:"
             echo "$leaked"
+            exit 1
+          fi
+
+      # シンボリックリンク経由で非公開データを指し込む迂回も拒否する（git のモード 120000）
+      - name: シンボリックリンクの追跡を禁止
+        run: |
+          symlinks=$(git ls-files -s | awk '$1=="120000" {print $4}')
+          if [ -n "$symlinks" ]; then
+            echo "シンボリックリンクが追跡されています（非公開データの迂回に使われうるため禁止）:"
+            echo "$symlinks"
             exit 1
           fi
 
