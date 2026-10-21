@@ -4,12 +4,11 @@ import json
 from pathlib import Path
 
 import pytest
+from _samples import SAMPLES
 
 from jdocbench.adapters.pymupdf import PymupdfAdapter
 from jdocbench.normalizers._tables import drop_table_content_lines
 from jdocbench.normalizers.pymupdf import normalize
-
-_SAMPLES = Path(__file__).resolve().parents[1] / "samples"
 
 
 def test_available_follows_find_spec(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -30,7 +29,7 @@ def test_version_is_unknown_without_pymupdf(monkeypatch: pytest.MonkeyPatch) -> 
     reason="pymupdf が無い環境ではスキップ（オプトイン extra）",
 )
 def test_pymupdf_writes_raw_output(tmp_path: Path) -> None:
-    pdfs = sorted(_SAMPLES.glob("*.pdf"))
+    pdfs = sorted(SAMPLES.glob("*.pdf"))
     if not pdfs:
         pytest.skip("samples/ に PDF が無い")
 
@@ -79,7 +78,7 @@ def test_pymupdf_strips_table_part_of_a_joined_line_in_a_real_pdf(tmp_path: Path
     pymupdf は右の表だけを表として検出し、左の表の行と右の表の行を 1 行に連結する。右の表の
     語だけを除き、左の表の語（table ブロックには無い）は段落に残す。
     """
-    pdf = _SAMPLES / "mof-financial-statements-fy2024-excerpt.pdf"
+    pdf = SAMPLES / "mof-financial-statements-fy2024-excerpt.pdf"
     if not pdf.is_file():
         pytest.skip("samples/ に mof-financial の PDF が無い")
 

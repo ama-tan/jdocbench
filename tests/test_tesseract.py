@@ -4,6 +4,7 @@ import subprocess
 from pathlib import Path
 
 import pytest
+from _samples import SAMPLES
 
 from jdocbench.adapters import tesseract as tesseract_module
 from jdocbench.adapters.tesseract import (
@@ -14,8 +15,6 @@ from jdocbench.adapters.tesseract import (
 )
 from jdocbench.normalizers import NORMALIZERS
 from jdocbench.normalizers.tesseract import normalize as normalize_tesseract
-
-_SAMPLES = Path(__file__).resolve().parents[1] / "samples"
 
 
 def _tesseract_jpn_available() -> bool:
@@ -105,7 +104,7 @@ def test_psm6_normalizer_renames_adapter(tmp_path: Path) -> None:
 )
 def test_text_layer_pdf_is_skipped(tmp_path: Path) -> None:
     """テキスト層のある PDF では OCR を走らせず skipped を返す（tesseract が無くても通る）。"""
-    pdf = _SAMPLES / "stat-go-jp-children-population-2026.pdf"
+    pdf = SAMPLES / "stat-go-jp-children-population-2026.pdf"
     if not pdf.is_file():
         pytest.skip("samples/ に対象 PDF が無い")
 
@@ -118,7 +117,7 @@ def test_text_layer_pdf_is_skipped(tmp_path: Path) -> None:
 @pytest.mark.skipif(not _tesseract_jpn_available(), reason="tesseract（jpn）が無い環境ではスキップ")
 def test_real_scan_respects_crop_box(tmp_path: Path) -> None:
     """見開きの MediaBox を CropBox で片ページにした実物スキャンを、ページ数どおりに読む。"""
-    pdf = _SAMPLES / "estat-census-1920-scan-excerpt.pdf"
+    pdf = SAMPLES / "estat-census-1920-scan-excerpt.pdf"
     if not pdf.is_file():
         pytest.skip("samples/ に対象 PDF が無い")
 

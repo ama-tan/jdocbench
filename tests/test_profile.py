@@ -4,6 +4,7 @@ import json
 from pathlib import Path
 
 import pytest
+from _samples import SAMPLES
 
 from jdocbench.cli import _run, main
 
@@ -12,7 +13,7 @@ pytestmark = pytest.mark.skipif(
     reason="pymupdf が無い環境ではスキップ（オプトイン extra）",
 )
 
-_SAMPLES = Path(__file__).resolve().parents[1] / "samples"
+
 _LINE = "x" * 40  # Helvetica 11pt で約 220pt（A4 幅 595pt の 25% を超える長い行）
 
 
@@ -152,11 +153,11 @@ def test_samples_match_known_characteristics() -> None:
     """手で確認した特性（samples/README.md）と一致すること。"""
     from jdocbench.profile import profile_pdf
 
-    env = _SAMPLES / "env-financial-statements-fy2024-excerpt.pdf"
-    jacn = _SAMPLES / "jacn-29-0039-katakana-transliteration-2025.pdf"
-    scan = _SAMPLES / "stat-go-jp-children-population-2026-scan.pdf"
-    budget = _SAMPLES / "mof-budget-summary-fy2026.pdf"
-    jsda = _SAMPLES / "jsda-9-3-e15-oais-information-package-2025-excerpt.pdf"
+    env = SAMPLES / "env-financial-statements-fy2024-excerpt.pdf"
+    jacn = SAMPLES / "jacn-29-0039-katakana-transliteration-2025.pdf"
+    scan = SAMPLES / "stat-go-jp-children-population-2026-scan.pdf"
+    budget = SAMPLES / "mof-budget-summary-fy2026.pdf"
+    jsda = SAMPLES / "jsda-9-3-e15-oais-information-package-2025-excerpt.pdf"
     if not all(p.is_file() for p in (env, jacn, scan, budget, jsda)):
         pytest.skip("samples/ に PDF が無い")
 
@@ -190,14 +191,14 @@ def test_samples_have_no_vertical_text_pages() -> None:
         "stat-go-jp-children-population-2026-scan.pdf",
         "stat-go-jp-children-population-2026.pdf",
     )
-    pdfs = [_SAMPLES / name for name in names]
+    pdfs = [SAMPLES / name for name in names]
     if not all(p.is_file() for p in pdfs):
         pytest.skip("samples/ に PDF が無い")
 
     for pdf in pdfs:
         assert profile_pdf(pdf)["vertical_text_pages"] == [], pdf.name
     # mof-financial p3 の縦書きセル（12 文字）は数えるが、閾値には届かない
-    mof = profile_pdf(_SAMPLES / "mof-financial-statements-fy2024-excerpt.pdf")
+    mof = profile_pdf(SAMPLES / "mof-financial-statements-fy2024-excerpt.pdf")
     assert mof["page_details"][2]["vertical_chars"] == 12
 
 

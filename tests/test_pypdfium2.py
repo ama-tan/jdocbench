@@ -4,11 +4,10 @@ import json
 from pathlib import Path
 
 import pytest
+from _samples import SAMPLES
 
 from jdocbench.adapters.pypdfium2 import Pypdfium2Adapter
 from jdocbench.normalizers.pypdfium2 import normalize
-
-_SAMPLES = Path(__file__).resolve().parents[1] / "samples"
 
 
 def test_available_follows_find_spec(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -47,7 +46,7 @@ def test_normalize_splits_lines_and_keeps_empty_pages(tmp_path: Path) -> None:
     reason="pypdfium2 が無い環境ではスキップ（extra level1）",
 )
 def test_pypdfium2_writes_raw_output(tmp_path: Path) -> None:
-    pdf = _SAMPLES / "stat-go-jp-children-population-2026.pdf"
+    pdf = SAMPLES / "stat-go-jp-children-population-2026.pdf"
     if not pdf.exists():
         pytest.skip("samples/ に対象 PDF が無い")
 

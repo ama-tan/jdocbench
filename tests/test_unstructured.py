@@ -4,13 +4,12 @@ import json
 from pathlib import Path
 
 import pytest
+from _samples import SAMPLES
 
 from jdocbench.adapters import ADAPTERS
 from jdocbench.adapters.unstructured import UnstructuredAdapter
 from jdocbench.normalizers import NORMALIZERS
 from jdocbench.normalizers.unstructured import normalize
-
-_SAMPLES = Path(__file__).resolve().parents[1] / "samples"
 
 _needs_unstructured = pytest.mark.skipif(
     importlib.util.find_spec("unstructured") is None,
@@ -111,7 +110,7 @@ def test_normalize_no_elements_has_no_pages(tmp_path: Path) -> None:
 
 @_needs_unstructured
 def test_unstructured_writes_raw_elements(tmp_path: Path) -> None:
-    pdf = _SAMPLES / "geps-manual-internet-excerpt.pdf"
+    pdf = SAMPLES / "geps-manual-internet-excerpt.pdf"
     if not pdf.is_file():
         pytest.skip("samples/geps-manual-internet-excerpt.pdf が無い")
 

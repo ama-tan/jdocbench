@@ -3,6 +3,7 @@ import shutil
 from pathlib import Path
 
 import pytest
+from _samples import SAMPLES
 
 from jdocbench import perf
 from jdocbench.adapters import ADAPTERS, _java
@@ -16,8 +17,6 @@ from jdocbench.adapters.tabula import (
 )
 from jdocbench.normalizers import NORMALIZERS
 from jdocbench.normalizers.tabula import normalize
-
-_SAMPLES = Path(__file__).resolve().parents[1] / "samples"
 
 _needs_tabula = pytest.mark.skipif(
     not TabulaAdapter().available(),
@@ -169,7 +168,7 @@ def test_tabula_run_passes_xmx_and_records_extra(
     ("adapter", "mode"), [(TabulaAdapter(), "lattice"), (TabulaStreamAdapter(), "stream")]
 )
 def test_tabula_writes_raw_tables(tmp_path: Path, adapter: TabulaAdapter, mode: str) -> None:
-    pdf = _SAMPLES / "geps-manual-internet-excerpt.pdf"
+    pdf = SAMPLES / "geps-manual-internet-excerpt.pdf"
     if not pdf.is_file():
         pytest.skip("samples/geps-manual-internet-excerpt.pdf が無い")
 
@@ -197,7 +196,7 @@ def test_tabula_writes_raw_tables(tmp_path: Path, adapter: TabulaAdapter, mode: 
 @_needs_tabula
 def test_tabula_lattice_finds_ruled_table(tmp_path: Path) -> None:
     """罫線つきの表（GEPS p1 の提出書類の表）を lattice で取れる。"""
-    pdf = _SAMPLES / "geps-manual-internet-excerpt.pdf"
+    pdf = SAMPLES / "geps-manual-internet-excerpt.pdf"
     if not pdf.is_file():
         pytest.skip("samples/geps-manual-internet-excerpt.pdf が無い")
 

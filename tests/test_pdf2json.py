@@ -4,11 +4,10 @@ import subprocess
 from pathlib import Path
 
 import pytest
+from _samples import SAMPLES
 
 from jdocbench.adapters.pdf2json import Pdf2jsonAdapter
 from jdocbench.normalizers.pdf2json import normalize
-
-_SAMPLES = Path(__file__).resolve().parents[1] / "samples"
 
 
 def _completed(stdout: str) -> subprocess.CompletedProcess:
@@ -43,7 +42,7 @@ def test_pdf2json_writes_json(tmp_path: Path) -> None:
     # samples/ の先頭（辞書順）は AES-256 で暗号化された jacn-* で、pdf2json は 4.0.3 / 4.1.0 の
     # どちらも `unsupported encryption algorithm` で失敗する。アダプタの疎通を見るテストなので、
     # 他のアダプタのテストと同じく暗号化していないサンプルを名指しする
-    pdf = _SAMPLES / "mof-budget-summary-fy2026.pdf"
+    pdf = SAMPLES / "mof-budget-summary-fy2026.pdf"
     if not pdf.is_file():
         pytest.skip("samples/ に対象 PDF が無い")
 

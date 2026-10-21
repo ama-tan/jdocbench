@@ -3,13 +3,12 @@ import importlib.util
 from pathlib import Path
 
 import pytest
+from _samples import SAMPLES
 
 from jdocbench.adapters import ADAPTERS
 from jdocbench.adapters.markitdown import MarkitdownAdapter
 from jdocbench.normalizers import NORMALIZERS
 from jdocbench.normalizers.markitdown import normalize
-
-_SAMPLES = Path(__file__).resolve().parents[1] / "samples"
 
 _needs_markitdown = pytest.mark.skipif(
     importlib.util.find_spec("markitdown") is None,
@@ -96,7 +95,7 @@ def test_normalize_empty_output_has_no_pages(tmp_path: Path) -> None:
 @_needs_markitdown
 def test_markitdown_writes_raw_markdown(tmp_path: Path) -> None:
     """表を含む文書（予算の概要）では Markdown の表が出て、table ブロックになる。"""
-    pdf = _SAMPLES / "mof-budget-summary-fy2026.pdf"
+    pdf = SAMPLES / "mof-budget-summary-fy2026.pdf"
     if not pdf.is_file():
         pytest.skip("samples/mof-budget-summary-fy2026.pdf が無い")
 
@@ -117,7 +116,7 @@ def test_markitdown_writes_raw_markdown(tmp_path: Path) -> None:
 @_needs_markitdown
 def test_markitdown_keeps_pages_for_plain_text_pdf(tmp_path: Path) -> None:
     """フォーム・表を検出しない文書は pdfminer の \f 区切りになり、ページが残る。"""
-    pdf = _SAMPLES / "geps-manual-internet-excerpt.pdf"
+    pdf = SAMPLES / "geps-manual-internet-excerpt.pdf"
     if not pdf.is_file():
         pytest.skip("samples/geps-manual-internet-excerpt.pdf が無い")
 

@@ -3,11 +3,10 @@ import subprocess
 from pathlib import Path
 
 import pytest
+from _samples import SAMPLES
 
 from jdocbench.adapters.mutool import STEXT_FILE, MutoolAdapter
 from jdocbench.normalizers.mutool import normalize
-
-_SAMPLES = Path(__file__).resolve().parents[1] / "samples"
 
 # `mutool draw -F stext` の出力の形（MuPDF 1.2x）。char の quad 等は省略している
 _STEXT = """<?xml version="1.0"?>
@@ -78,7 +77,7 @@ def test_normalize_builds_one_paragraph_per_line(tmp_path: Path) -> None:
 
 @pytest.mark.skipif(shutil.which("mutool") is None, reason="mutool が無い環境ではスキップ")
 def test_mutool_writes_stext(tmp_path: Path) -> None:
-    pdf = _SAMPLES / "stat-go-jp-children-population-2026.pdf"
+    pdf = SAMPLES / "stat-go-jp-children-population-2026.pdf"
     if not pdf.exists():
         pytest.skip("samples/ に対象 PDF が無い")
 

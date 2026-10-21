@@ -2,6 +2,7 @@ import shutil
 from pathlib import Path
 
 import pytest
+from _samples import SAMPLES
 
 from jdocbench import perf
 from jdocbench.adapters import ADAPTERS, _java
@@ -10,8 +11,6 @@ from jdocbench.adapters._java import JVM_XMX, java_cmd
 from jdocbench.adapters.tika import JAR_ENV, JAR_NAME, TikaAdapter, parse_version
 from jdocbench.normalizers import NORMALIZERS
 from jdocbench.normalizers.tika import normalize
-
-_SAMPLES = Path(__file__).resolve().parents[1] / "samples"
 
 _needs_tika = pytest.mark.skipif(
     not TikaAdapter().available(),
@@ -170,7 +169,7 @@ def test_tika_run_passes_xmx_and_records_extra(
 
 @_needs_tika
 def test_tika_writes_raw_xhtml(tmp_path: Path) -> None:
-    pdf = _SAMPLES / "geps-manual-internet-excerpt.pdf"
+    pdf = SAMPLES / "geps-manual-internet-excerpt.pdf"
     if not pdf.is_file():
         pytest.skip("samples/geps-manual-internet-excerpt.pdf が無い")
 
