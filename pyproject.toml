@@ -7,6 +7,9 @@ requires-python = ">=3.12"
 license = { file = "LICENSE" }
 dependencies = ["rapidfuzz>=3.9"]
 
+[project.urls]
+Repository = "https://github.com/ama-tan/jdocbench"
+
 # Level 1 アダプタ（Python ライブラリ）。既定の依存には入れず `uv sync --all-extras` で入れる
 # pypdfium2（Apache-2.0 / BSD-3-Clause）は Level 0 の `pypdfium2` アダプタ用。pdfplumber の依存でも
 # 入るが、アダプタが直接使うので明示する
