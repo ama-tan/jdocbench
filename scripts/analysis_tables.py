@@ -1,4 +1,5 @@
-"""分析レポート（#175、docs/analysis.md）の表の元を CI の結果から出す。
+"""分析レポート（#175、結果側リポジトリ（ama-tan/jdoc-bench、非公開）の docs/analysis.md）の
+表の元を CI の結果から出す。
 
 使い方（CI アーティファクト `ci-results-full` を展開したディレクトリを渡す）:
 
@@ -12,7 +13,8 @@ roa_effective / wall_time_sec / peak_rss_kb）と、あれば
 - 文書 × アダプタのサブスコア（CF / SED / TSF / Total 用の ROA / ROA の対応率）
 - アダプタごとの Wall・Peak RSS の範囲と、docling・ppstructure の Wall の pdfplumber 比
 
-docs/analysis.md の数値は run 37876279369（Sprint 13 最終）の `ci-results-full` から出した。
+結果側リポジトリの docs/analysis.md の数値は run 37876279369（Sprint 13 最終）の
+`ci-results-full` から出した。
 外部 API もモデルも使わない。router_eval.py と同じく、CI の結果を読む一回限りの分析なので
 CLI には入れない。
 """

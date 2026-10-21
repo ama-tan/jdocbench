@@ -9,7 +9,8 @@
 無ければ `<samples>/<stem>.pdf` を `profile_pdf` で計算する（PyMuPDF が要る）。
 Router に渡す実行環境の日本語フォント（C3 の分岐が使う。#173）は `<results-dir>/<stem>/run.json` の
 `fonts_ja`（その結果を出した環境の値）。run.json やその項目が無ければ None（調べられなかった扱い）。
-出力は Markdown（docs/router.md「Router の評価」の表の元）を標準出力へ。
+出力は Markdown（結果側リポジトリ（ama-tan/jdoc-bench、非公開）の docs/router.md
+「Router の評価」の表の元）を標準出力へ。
 
 戦略:
 - Router（quality / cost）: `jdocbench.router.route` の推奨。推奨パーサーがその文書で ok でなければ
