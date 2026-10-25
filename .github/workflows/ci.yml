@@ -42,6 +42,47 @@ jobs:
             exit 1
           fi
 
+      # 公開サイト（site/）の流出ガード（jdoc-bench#271）。site/ が無ければ何もしない。
+      # 置いてよいのは .html と .json だけ。HTML に外部読み込み・埋め込み（禁止したタグ・data URI・
+      # CSS の url()・javascript:）が無いこと、1 ファイル 300KB 未満であること、YomiToku の結果
+      # （アダプタ名 yomitoku）が無いことを確かめる。固定の注記に「YomiToku」が出るので大文字小文字は区別する
+      - name: 公開サイト（site/）のファイルと中身を検査
+        run: |
+          files=$(git ls-files site)
+          if [ -z "$files" ]; then
+            echo "site/ がないため検査を省略します"
+            exit 0
+          fi
+          status=0
+          others=$(echo "$files" | grep -vE '\.(html|json)$' || true)
+          if [ -n "$others" ]; then
+            echo "site/ に .html / .json 以外のファイルがあります:"
+            echo "$others"
+            status=1
+          fi
+          html=$(echo "$files" | grep -E '\.html$' || true)
+          if [ -n "$html" ]; then
+            hits=$(echo "$html" | xargs grep -niE '<[[:space:]]*(img|script|iframe|object|embed|link)\b|data:|url\(|javascript:' || true)
+            if [ -n "$hits" ]; then
+              echo "site/ の HTML に禁止したタグ・data:・url(・javascript: があります:"
+              echo "$hits"
+              status=1
+            fi
+            hits=$(echo "$html" | xargs grep -n 'yomitoku' || true)
+            if [ -n "$hits" ]; then
+              echo "site/ の HTML に yomitoku があります（結果を載せない）:"
+              echo "$hits"
+              status=1
+            fi
+          fi
+          large=$(echo "$files" | xargs stat -c '%s %n' | awk '$1 >= 300000')
+          if [ -n "$large" ]; then
+            echo "site/ に 300KB（300000 バイト）以上のファイルがあります:"
+            echo "$large"
+            status=1
+          fi
+          exit $status
+
       # Level 0 パーサー（外部コマンド）。アダプタは available() で有無を自己申告するため、
       # 無くても lint / test は通るが、実 PDF のテストを CI で走らせるためにここで入れる。
       # tesseract-ocr-jpn は Tesseract（tesseract / tesseract_psm6 アダプタ）の日本語の学習データ（#196）。
@@ -71,6 +112,22 @@ jobs:
       # uv.lock どおりに環境を再現する（lock がずれていれば失敗させる）
       - name: 依存関係のインストール
         run: uv sync --frozen --all-extras
+
+      # site/ の HTML が data.json（数値だけ）と documents.json（公開情報）の純関数であることを、
+      # 再生成して差分が無いことで確かめる（手で足した文字列があれば落ちる。jdoc-bench#271）
+      - name: 公開サイト（site/）を再生成して差分が無いことを確認
+        run: |
+          if [ -z "$(git ls-files site)" ]; then
+            echo "site/ がないため検査を省略します"
+            exit 0
+          fi
+          out=$(mktemp -d)
+          uv run jdocbench site site/data.json --meta site/documents.json --out "$out"
+          cp site/data.json site/documents.json "$out"/
+          if ! diff -r "$out" site; then
+            echo "site/ が data.json と documents.json から再生成したものと一致しません（上の差分を参照）"
+            exit 1
+          fi
 
       - name: Lint
         run: uv run ruff check .

@@ -6,16 +6,18 @@ fixture の値はすべてダミー。実データの文書名・原文は入れ
 import copy
 import json
 import re
+from html.parser import HTMLParser
 from pathlib import Path
 
 import pytest
 
+from jdocbench.adapters import ADAPTERS
 from jdocbench.cli import main
-from jdocbench.site import build_site_data
-from jdocbench.sitehtml import build_site
+from jdocbench.site import _STATUSES, build_site_data
+from jdocbench.sitehtml import _STYLE, FIXED_TEXTS, build_site
 from jdocbench.summary import render, to_summary
 
-_FORBIDDEN_TAG = re.compile(r"<\s*(script|link|img|iframe)\b", re.IGNORECASE)
+_FORBIDDEN_TAG = re.compile(r"<\s*(script|link|img|iframe|object|embed)\b", re.IGNORECASE)
 
 
 def _adapter(total, cf, tsf, jnf, version="1.0") -> dict:
@@ -242,3 +244,140 @@ def test_index_conditions_and_best_total():
     meta2 = copy.deepcopy(meta)
     meta2["source"]["run_url"] = "https://example.com/run"
     assert '<a href="https://example.com/run">' in build_site(_data(), meta2)["index.html"]
+
+
+# ---- テキスト出所テスト（流出ガード。jdoc-bench#271） ----
+# 生成 HTML の本文のテキストが、次のどれかだけでできていることを確かめる。
+#   sitehtml の固定の文言（FIXED_TEXTS）／数値・`-`・SHA・日時・区切り記号／documents.json の値／
+#   アダプタ名（ADAPTERS）・status（site._STATUSES）・data.json の version と実行環境の値
+# どれにも当たらない文字列（data.json に紛れ込んだ原文など）が本文に出たら落ちる。
+
+# 値を組み合わせるときに入る数値・記号。`T` は日時の区切りにだけ許す
+_ATOMS = (
+    r"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:[+-]\d{2}:\d{2}|Z)?",
+    r"[0-9a-f]{7,64}",
+    r"\d+(?:\.\d+)?",
+    r"[\s\-/.:、（）()]",
+)
+_ENV_KEYS = ("cpu", "platform", "python", "jdocbench_version", "started_at")
+_FORBIDDEN_TEXT = ("data:", "url(", "javascript:")
+
+
+def _strings(value: object) -> list[str]:
+    """JSON の値に含まれる文字列（数値は文字列にして）を全部集める。"""
+    if isinstance(value, dict):
+        return [s for item in value.values() for s in _strings(item)]
+    if isinstance(value, list):
+        return [s for item in value for s in _strings(item)]
+    if value is None or isinstance(value, bool):
+        return []
+    return [str(value)]
+
+
+def _allowed(data: dict, meta: dict) -> set[str]:
+    """本文に出てよい値（固定の文言を含む）。"""
+    values = set(FIXED_TEXTS) | set(_strings(meta))
+    values |= {adapter.name for adapter in ADAPTERS} | set(_STATUSES)
+    for doc in data["documents"]:
+        values |= {str(e.get("version")) for e in doc["adapters"].values() if e.get("version")}
+        values |= {str(doc["run"][k]) for k in _ENV_KEYS if doc["run"].get(k) is not None}
+    return values
+
+
+class _Texts(HTMLParser):
+    """本文のテキストノードと href を集める（<style> の中は別に持つ）。"""
+
+    def __init__(self) -> None:
+        super().__init__(convert_charrefs=True)
+        self.texts: list[str] = []
+        self.styles: list[str] = []
+        self.hrefs: list[str] = []
+        self._tag = ""
+
+    def handle_starttag(self, tag, attrs):
+        self._tag = tag
+        self.hrefs += [value or "" for name, value in attrs if name == "href"]
+
+    def handle_endtag(self, tag):
+        self._tag = ""
+
+    def handle_data(self, data):
+        (self.styles if self._tag == "style" else self.texts).append(data)
+
+
+def _violations(pages: dict[str, str], data: dict, meta: dict) -> list[str]:
+    """出所の分からないテキスト・href と、禁止したタグ・文字列を列挙する（空なら合格）。"""
+    allowed = _allowed(data, meta)
+    # 2 文字以上の値は組み合わせて使ってよい（1 文字の値は、それだけのノードのときに限る）
+    words = sorted((v for v in allowed if len(v) >= 2), key=len, reverse=True)
+    pattern = re.compile("(?:" + "|".join([*map(re.escape, words), *_ATOMS]) + ")+")
+    hrefs = {"../index.html"} | set(_strings(meta))
+    hrefs |= {f"documents/{doc['stem']}.html" for doc in data["documents"]}
+    found = []
+    for path, text in pages.items():
+        parser = _Texts()
+        parser.feed(text)
+        for node in parser.texts:
+            if node.strip() and node not in allowed and not pattern.fullmatch(node):
+                found.append(f"{path}: テキスト {node!r}")
+        found += [f"{path}: style" for style in parser.styles if style != _STYLE]
+        found += [f"{path}: href {href!r}" for href in parser.hrefs if href not in hrefs]
+        if _FORBIDDEN_TAG.search(text):
+            found.append(f"{path}: 禁止したタグ")
+        found += [f"{path}: {word}" for word in _FORBIDDEN_TEXT if word in text.lower()]
+        if "yomitoku" in text:
+            found.append(f"{path}: yomitoku")
+    return found
+
+
+def _real_names_data() -> dict:
+    """アダプタ名を実在の名前（ADAPTERS）にした data.json。"""
+    data = _data()
+    for doc in data["documents"]:
+        doc["adapters"] = {
+            {"alpha": "pdfplumber", "beta": "pymupdf"}.get(name, name): entry
+            for name, entry in doc["adapters"].items()
+        }
+    return data
+
+
+def test_text_provenance_passes_for_generated_site():
+    data, meta = _real_names_data(), _meta()
+    meta["source"]["run_url"] = "https://example.com/run"
+    meta["source"]["article_url"] = "https://example.com/article"
+    pages = build_site(data, meta)
+    assert _violations(pages, data, meta) == []
+    # 空振りしていないこと（本文のテキストを実際に拾っている）
+    parser = _Texts()
+    parser.feed(pages["index.html"])
+    assert "pdfplumber" in parser.texts and "注記" in parser.texts
+
+
+def test_text_provenance_rejects_stray_strings():
+    data, meta = _real_names_data(), _meta()
+    pages = build_site(data, meta)
+    # 生成後に紛れ込んだ文字列（ダミー）
+    stray = dict(pages)
+    stray["index.html"] = pages["index.html"].replace("</body>", "<p>紛れ込んだ一節</p></body>")
+    assert _violations(stray, data, meta) == ["index.html: テキスト '紛れ込んだ一節'"]
+    # data.json に紛れ込んだ文字列: 実在しないアダプタ名・未知の status は本文に出ると落ちる
+    for key, value in (("name", "原文の一節"), ("status", "原文の一節")):
+        bad = copy.deepcopy(data)
+        adapters = bad["documents"][0]["adapters"]
+        if key == "name":
+            adapters[value] = adapters.pop("pdfplumber")
+        else:
+            adapters["pdfplumber"]["status"] = value
+        assert any("原文の一節" in v for v in _violations(build_site(bad, meta), bad, meta))
+    # 禁止したタグ・data URI・CSS の url()・外部へのリンク
+    for extra in (
+        '<img src="x.png">',
+        "<object></object>",
+        "<embed>",
+        '<link rel="stylesheet" href="x.css">',
+        '<a href="data:text/html,x">-</a>',
+        '<p style="background:url(x)">-</p>',
+        '<a href="https://evil.example.com/">-</a>',
+    ):
+        bad = {"index.html": pages["index.html"].replace("</body>", f"{extra}</body>")}
+        assert _violations(bad, data, meta), extra
