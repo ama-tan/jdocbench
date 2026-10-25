@@ -69,6 +69,13 @@ v0.1 では **Total に入れない**。`evaluate` は `jnf`（値）と `jnf_cl
 report / summary では Total の隣に別の列として出す。`gt` は GT 側のクラス文字の数（整列前）、
 `exact` / `folded` は上の規則の数で、出力側だけの表記差を含むため `folded` が `gt` を超えることがある。
 
+## 既知の揺れ（kanpo × markitdown）
+
+官報（`kanpo-20261020-h1811-excerpt`）の markitdown は、コードを変えていない run の間で JNF が 0.81〜0.93 で揺れる（CF・ROA も小さく揺れる。Total は丸めると変わらない）。
+原因は pdfminer の `group_textboxes` で、テキストボックスを結合する順序をヒープの同点のとき `id()`（メモリアドレス）で決めている。
+縦書きは 1 文字 1 行になり距離の同点が多いため、プロセスごとに出力順が変わる（`PYTHONHASHSEED` を固定しても止まらない）。
+決定的にするにはパーサーの設定を変える必要があり、特定のパーサーに手を入れない方針に反するので直さない（jdoc-bench#267）。
+
 ## 例（既存 9 文書、Sprint 17 最終 run の normalized で試算）
 
 既存の GT を変えずに計算できる。値は JNF（folded / exact + folded）、`—` は None。
