@@ -22,6 +22,7 @@ from jdocbench.profile import profile_pdf
 from jdocbench.report import render
 from jdocbench.router import MODES, route_all
 from jdocbench.site import build_site_data
+from jdocbench.sitehtml import build_site
 from jdocbench.summary import find_failures, short_message, to_summary
 from jdocbench.summary import render as render_summary
 from jdocbench.view import render as render_view
@@ -600,6 +601,28 @@ def _site_data(args: argparse.Namespace) -> int:
     return 2 if broken else 0
 
 
+def _site(args: argparse.Namespace) -> int:
+    """data.json と documents.json だけから公開サイトの静的 HTML を作る（jdoc-bench#270）。
+
+    `<out>/index.html` と `<out>/documents/<stem>.html` を書く。stem が食い違うなど入力が
+    不正なら何も書かずに 2 を返す。
+    """
+    try:
+        data = json.loads(Path(args.data).read_text(encoding="utf-8"))
+        meta = json.loads(Path(args.meta).read_text(encoding="utf-8"))
+        pages = build_site(data, meta)
+    except (OSError, UnicodeDecodeError, json.JSONDecodeError, ValueError) as exc:
+        print(f"サイトを作れません（{type(exc).__name__}）: {exc}", file=sys.stderr)
+        return 2
+    out = Path(args.out)
+    for relative, text in pages.items():
+        dest = out / relative
+        dest.parent.mkdir(parents=True, exist_ok=True)
+        dest.write_text(text, encoding="utf-8")
+    print(out / "index.html")
+    return 0
+
+
 def _gt_init(args: argparse.Namespace) -> int:
     """normalized/<adapter>.json を Ground Truth の seed として groundtruth/ に写す。
 
@@ -725,6 +748,18 @@ def main(argv: list[str] | None = None) -> int:
         help="出力から列ごと落とすアダプタ（繰り返し可。例: yomitoku）",
     )
     site_data_parser.set_defaults(func=_site_data)
+
+    site_parser = subparsers.add_parser(
+        "site", help="data.json と documents.json から公開サイトの静的 HTML を作る"
+    )
+    site_parser.add_argument("data", help="jdocbench site-data で作った data.json")
+    site_parser.add_argument(
+        "--meta", required=True, help="文書の公開情報（出典・ライセンス等）の documents.json"
+    )
+    site_parser.add_argument(
+        "--out", required=True, help="出力先ディレクトリ（index.html と documents/ を書く）"
+    )
+    site_parser.set_defaults(func=_site)
 
     gt_parser = subparsers.add_parser("gt", help="Ground Truth を操作する")
     gt_subparsers = gt_parser.add_subparsers(dest="gt_command", required=True)
