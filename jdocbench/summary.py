@@ -5,7 +5,7 @@
 「どの文書にどの Parser か」を 1 表で見られるようにするのが目的。
 """
 
-from collections.abc import Callable, Sequence
+from collections.abc import Callable, Mapping, Sequence
 from pathlib import PurePath
 
 _MISSING = "-"
@@ -130,9 +130,12 @@ def _mean(values: list[float]) -> str:
     return _round(sum(values) / len(values), _MEAN_DIGITS) if values else _MISSING
 
 
-def _mean_row(runs: list[dict], name: str) -> tuple[str, ...] | None:
-    """Parser 1 件の平均行。DSQS を計算した文書が 1 件も無ければ None。"""
-    scores = [_dsqs(_result(run, name)) for run in runs]
+def mean_values(scores: Sequence[Mapping]) -> tuple[str, ...] | None:
+    """Parser 1 件の平均（n / Total / JNF / CF / SED / TSF / ROA の文字列）。
+
+    `scores` は文書ごとの DSQS-JP スコア（評価していない文書は空 dict）。空でない文書が
+    1 件も無ければ None。公開サイト（jdocbench.sitehtml）も同じ式を使う。
+    """
     scores = [score for score in scores if score]
     if not scores:
         return None
@@ -140,7 +143,13 @@ def _mean_row(runs: list[dict], name: str) -> tuple[str, ...] | None:
         _mean([value for score in scores if _is_number(value := score.get(key))])
         for key in _MEAN_KEYS
     ]
-    return (_cell(name), str(len(scores)), *means)
+    return (str(len(scores)), *means)
+
+
+def _mean_row(runs: list[dict], name: str) -> tuple[str, ...] | None:
+    """Parser 1 件の平均行。DSQS を計算した文書が 1 件も無ければ None。"""
+    values = mean_values([_dsqs(_result(run, name)) for run in runs])
+    return None if values is None else (_cell(name), *values)
 
 
 def find_failures(
