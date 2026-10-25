@@ -116,6 +116,17 @@ seed を PDF と照合して人手で直したものを正とします。`ground
 - 段落は表の中身を含まない（表の中身は table だけが持つ）。表のタイトル・単位・注記は段落に残す
 - 結合セルは範囲の先頭（左上）のセルにだけ文字列を入れ、他のセルは空文字にする。別のセルなら同じ文字列でも両方に書く
 
+## スクリプト
+
+`uv run python scripts/compare_summaries.py <a.json> <b.json>`: 2 つの `summary.json`
+（`jdocbench summary` の出力。別の場所で同じスキーマの `data.json` を作る場合も使えます）を、
+文書 stem × アダプタの全組で照合します。既定で比べるのは status / total / cf / sed / tsf /
+roa_effective / jnf、トップレベルの missing（結果の無い文書）・failures（失敗したアダプタ）の
+集合も比べます。アダプタの結果自体が片方にしか無い組も差として出します。差があれば Markdown の
+表を標準出力に出し、終了コード 1 で終わります（無ければ 0）。既知の揺れを許す組は
+`--allow STEM:ADAPTER`（繰り返し指定可）で除いて表に残しつつ終了コードには数えず、
+Wall / Peak RSS は `--include-perf` を付けたときだけ比べます。
+
 ## テスト
 
 ```bash
