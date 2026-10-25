@@ -21,6 +21,7 @@ from jdocbench.perf import run_command
 from jdocbench.profile import profile_pdf
 from jdocbench.report import render
 from jdocbench.router import MODES, route_all
+from jdocbench.site import build_site_data
 from jdocbench.summary import find_failures, short_message, to_summary
 from jdocbench.summary import render as render_summary
 from jdocbench.view import render as render_view
@@ -552,6 +553,53 @@ def _summary(args: argparse.Namespace) -> int:
     return 2 if missing or unexpected else 0
 
 
+def _site_data(args: argparse.Namespace) -> int:
+    """結果ディレクトリから公開サイト用の数値だけの data.json を作る（jdoc-bench#269）。
+
+    読むのは `<results>/summary.json` と、そこに載っている文書の `<results>/<stem>/run.json`
+    だけ。raw/・normalized/・metrics/・profile.json・PDF・Ground Truth は開かない。
+    run.json からは allowlist のキーだけを使う（`jdocbench.site`）。読めない run.json があれば
+    その文書の実行環境のメタを None にして書き出し、2 を返す。
+    """
+    out = Path(args.results)
+    summary_json = out / "summary.json"
+    if not summary_json.is_file():
+        print(f"summary.json がありません: {summary_json}", file=sys.stderr)
+        return 2
+    summary = json.loads(summary_json.read_text(encoding="utf-8"))
+    runs: dict[str, dict] = {}
+    broken = False
+    for document in summary.get("documents") or []:
+        stem = document.get("stem") if isinstance(document, dict) else None
+        # stem をパスに使うので、ディレクトリ名 1 つ分の文字列だけ受け付ける
+        if not isinstance(stem, str) or not stem or stem != Path(stem).name or stem.startswith("."):
+            continue
+        run_json = out / stem / "run.json"
+        if not run_json.is_file():
+            continue
+        try:
+            runs[stem] = json.loads(run_json.read_text(encoding="utf-8"))
+        except (OSError, UnicodeDecodeError, json.JSONDecodeError) as exc:
+            # 例外の文字列は中身の断片を含みうるので、種類だけ出す
+            print(f"run.json を読めません（{type(exc).__name__}）: {run_json}", file=sys.stderr)
+            broken = True
+    names = {
+        name
+        for document in summary.get("documents") or []
+        if isinstance(document, dict) and isinstance(document.get("adapters"), dict)
+        for name in document["adapters"]
+    }
+    for name in args.exclude_adapter:
+        if name not in names:
+            print(f"--exclude-adapter のアダプタが結果にありません: {name}", file=sys.stderr)
+    data = build_site_data(summary, runs, args.exclude_adapter)
+    dest = Path(args.out)
+    dest.parent.mkdir(parents=True, exist_ok=True)
+    dest.write_text(json.dumps(data, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    print(dest)
+    return 2 if broken else 0
+
+
 def _gt_init(args: argparse.Namespace) -> int:
     """normalized/<adapter>.json を Ground Truth の seed として groundtruth/ に写す。
 
@@ -661,6 +709,22 @@ def main(argv: list[str] | None = None) -> int:
         ),
     )
     summary_parser.set_defaults(func=_summary)
+
+    site_data_parser = subparsers.add_parser(
+        "site-data", help="結果から公開サイト用の数値だけの data.json を作る"
+    )
+    site_data_parser.add_argument(
+        "results", help="summary.json のある結果ディレクトリ（results/<stem>/ の親）"
+    )
+    site_data_parser.add_argument("--out", required=True, help="出力する data.json のパス")
+    site_data_parser.add_argument(
+        "--exclude-adapter",
+        action="append",
+        default=[],
+        metavar="NAME",
+        help="出力から列ごと落とすアダプタ（繰り返し可。例: yomitoku）",
+    )
+    site_data_parser.set_defaults(func=_site_data)
 
     gt_parser = subparsers.add_parser("gt", help="Ground Truth を操作する")
     gt_subparsers = gt_parser.add_subparsers(dest="gt_command", required=True)
