@@ -99,6 +99,25 @@ uv run jdocbench run path/to/*.pdf
 - `uv run jdocbench profile path/to/*.pdf`: 文書の構造特性（テキスト層・段組み・罫線・フォント埋め込み）だけを書く（PyMuPDF が必要）
 - `uv run jdocbench route path/to/*.pdf`: Profile から推奨パーサー（品質重視 `quality` / コスト重視 `cost`）と理由を `route.json` に書く
 
+### 公開サイト用のデータ（site-data）
+
+```bash
+uv run jdocbench site-data results --out site/data.json --exclude-adapter yomitoku
+```
+
+結果ディレクトリから、公開サイト用の**数値だけ**の `data.json` を作ります。形は `summary.json` と互換
+（`documents` / `missing` / `failures`）で、各アダプタに `version` を、各文書に実行環境のメタ `run` を足し、
+トップの `run` に全文書で同じ値（違えば `null`。アダプタの版数は `adapter_versions`）を置きます。
+`--exclude-adapter` に挙げたアダプタは列ごと落とします（繰り返し可）。
+
+- 読むもの: `<results>/summary.json` の数値（pages・ground_truth_sha256・各アダプタの status と指標・Wall・Peak RSS）、
+  `missing` のファイル名、`failures` の stem / adapter / kind（message は入れません）。
+  `<results>/<stem>/run.json` の `pages` / `ground_truth_sha256` / `jdocbench_version` / `python` / `platform` /
+  `cpu` / `ram_total_bytes` / `started_at` / `fonts_ja` と、各アダプタの `version` / `status`
+- 読まないもの: run.json の `input` / `ground_truth`（パス）/ `reason` / `extra` などそれ以外のキー、
+  `raw/` / `normalized/` / `metrics/` / `profile.json` / `report.md` / `view.html`、PDF、Ground Truth
+- 文字列の値は形を検査し、想定外のもの（未知の status・kind、パス区切りを含む名前、長い文字列）は落とします
+
 ### Ground Truth
 
 ```bash
