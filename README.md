@@ -118,6 +118,42 @@ uv run jdocbench site-data results --out site/data.json --exclude-adapter yomito
   `raw/` / `normalized/` / `metrics/` / `profile.json` / `report.md` / `view.html`、PDF、Ground Truth
 - 文字列の値は形を検査し、想定外のもの（未知の status・kind、パス区切りを含む名前、長い文字列）は落とします
 
+### 公開サイト（site）
+
+```bash
+uv run jdocbench site site/data.json --meta site/documents.json --out site
+```
+
+`site-data` で作った `data.json` と、文書の公開情報を書いた `documents.json` の **2 つだけ**から、
+静的 HTML の `<out>/index.html`（説明・計測条件・文書一覧・DSQS Total・Parser 平均・注記）と
+`<out>/documents/<stem>.html`（出典・ライセンス・構造特性・パーサーごとの数値・計測環境）を作ります。
+JS・CDN・画像などの外部読み込みは使わず（CSS は `<style>` にインライン）、生成時刻を埋めないので、
+同じ入力からは同じ HTML になります。数値の桁と Parser 平均の式は `summary.md` と同じです。
+ページ画像・抽出テキスト・Ground Truth は載せません。
+
+`documents.json` の形は次のとおりです（`run_url` / `article_url` は `null` なら出しません）。
+`documents[].stem` の集合が `data.json` と一致しないときは何も書かずに 2 を返します。
+
+```json
+{
+  "source": {"run_id": "...", "run_url": null, "commit": "...", "tool_sha": "...",
+             "measured_at": "YYYY-MM-DD", "repo_url": "https://...", "article_url": null, "notes": ["..."]},
+  "documents": [
+    {"stem": "...", "title": "...", "publisher": "...", "domain": "...", "pages": 1,
+     "source_url": "https://...", "license": {"name": "...", "url": "https://..."},
+     "attribution": "...", "features": ["..."], "excerpt_note": "...", "notes": ["..."]}
+  ]
+}
+```
+
+自分の結果で公開サイトを作る手順:
+
+1. `uv run jdocbench run path/to/*.pdf` で `results/`（`summary.json` を含む）を作る（別々に `run` したときは `uv run jdocbench summary results path/to/*.pdf` で作り直す）
+2. `uv run jdocbench site-data results --out site/data.json`（載せられないアダプタは `--exclude-adapter` で落とす）
+3. 各文書の出典・ライセンスを確かめて `site/documents.json` を書く
+4. `uv run jdocbench site site/data.json --meta site/documents.json --out site` で HTML を作り、
+   `site/` を GitHub Pages などで公開する
+
 ### Ground Truth
 
 ```bash
