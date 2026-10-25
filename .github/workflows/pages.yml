@@ -1,0 +1,61 @@
+name: Pages
+
+# site/ への push で公開サイトを GitHub Pages にデプロイする。
+# Pages の有効化（Settings > Pages > Source: GitHub Actions）はユーザー承認後に別途行う。
+# このワークフロー自体は有効化前でも安全に追加できるよう、site/ が無い・空のときは
+# デプロイをスキップし、失敗させない（jdoc-bench#272）。
+on:
+  push:
+    branches: [main]
+    paths: ['site/**']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# 同時に複数デプロイが走らないようにする。進行中の公開を取り消さないよう cancel はしない
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    # Pages へのデプロイに必要な権限だけ、このジョブに付与する（最小権限）
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # site/ が無い、または空のとき（Pages 未有効化の状態での workflow_dispatch 等）は
+      # 以降のステップを全てスキップし、ジョブは成功で終える
+      - name: site/ の存在を確認
+        id: check
+        run: |
+          if [ -d site ] && [ -n "$(find site -mindepth 1 -print -quit)" ]; then
+            echo "has_site=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "site/ が無い、または空のためデプロイをスキップします"
+            echo "has_site=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Setup Pages
+        if: steps.check.outputs.has_site == 'true'
+        uses: actions/configure-pages@v5
+
+      - name: Upload artifact
+        if: steps.check.outputs.has_site == 'true'
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+
+      - name: Deploy to GitHub Pages
+        if: steps.check.outputs.has_site == 'true'
+        id: deployment
+        uses: actions/deploy-pages@v5
