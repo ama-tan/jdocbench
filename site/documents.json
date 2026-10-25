@@ -1,0 +1,300 @@
+{
+  "source": {
+    "run_id": "39657469356",
+    "run_url": null,
+    "commit": "278acee",
+    "tool_sha": "9b76dfa",
+    "measured_at": "2026-10-21",
+    "repo_url": "https://github.com/ama-tan/jdocbench",
+    "article_url": null,
+    "notes": [
+      "計測は開発リポジトリ（非公開）の GitHub Actions の run で行った。Actions の URL は公開されていないため run_url は載せない（run_id と計測日で特定する）",
+      "評価に使った PDF・Ground Truth・抽出テキストは公開しない。ここには出典・ライセンス・構造特性などの公開情報だけを載せる",
+      "YomiToku の結果は載せない（CC BY-NC-SA 4.0 のため。docs/licenses.md を参照）"
+    ]
+  },
+  "documents": [
+    {
+      "stem": "env-financial-statements-fy2024-excerpt",
+      "title": "令和６年度 環境省一般会計省庁別財務書類",
+      "publisher": "環境省",
+      "domain": "Financial",
+      "pages": 5,
+      "source_url": "https://www.env.go.jp/guide/budget/financial_r06.html",
+      "license": {
+        "name": "公共データ利用規約（第1.0版）（PDL1.0）。CC BY 4.0 互換",
+        "url": "https://www.digital.go.jp/resources/open_data/public_data_license_v1.0"
+      },
+      "attribution": "「令和６年度 環境省一般会計省庁別財務書類」（環境省）https://www.env.go.jp/guide/budget/financial_r06.html を加工して作成（該当ページの抜粋）",
+      "features": [
+        "unit-million-yen",
+        "digit-grouping",
+        "negative-triangle",
+        "frame-only-table",
+        "ruled-table",
+        "merged-cell",
+        "hierarchical-row",
+        "non-embedded-cjk-font"
+      ],
+      "excerpt_note": "原本 29 ページのうち p2・p3・p5・p13・p22 を抜粋（ページ順は原本どおり）",
+      "notes": [
+        "利用条件: 環境省ホームページ「著作権・リンクについて」 https://www.env.go.jp/mail.html"
+      ]
+    },
+    {
+      "stem": "estat-census-1920-scan-excerpt",
+      "title": "大正九年 國勢調査報告 全國の部第一巻 のうち 例言（表紙を含む）・表番号 1・表番号 2",
+      "publisher": "内閣統計局（原本の刊行）／総務省統計局（画像化・e-Stat での公開）",
+      "domain": "Scan",
+      "pages": 4,
+      "source_url": "https://www.e-stat.go.jp/stat-search/files?tclass=000001026563&cycle=0&layout=datalist",
+      "license": {
+        "name": "政府統計の総合窓口（e-Stat）利用規約（政府標準利用規約（第2.0版）準拠）。CC BY 4.0 互換",
+        "url": "https://www.e-stat.go.jp/terms-of-use"
+      },
+      "attribution": "「大正９年国勢調査 全国の部第一巻」（総務省統計局）政府統計の総合窓口（e-Stat）https://www.e-stat.go.jp/stat-search/files?tclass=000001026563&cycle=0&layout=datalist を加工して作成（3 つの PDF を結合）",
+      "features": [
+        "scan",
+        "simple-table",
+        "multi-level-header",
+        "merged-cell",
+        "old-kanji",
+        "kanji-katakana-bungo",
+        "skew",
+        "crop-box"
+      ],
+      "excerpt_note": "e-Stat の 3 つの PDF（例言 2 ページ・表番号 1・表番号 2）を 1 つに結合（ページの中身は無加工）",
+      "notes": [
+        "紙を読み取った実物のスキャン（テキスト層なし）"
+      ]
+    },
+    {
+      "stem": "geps-manual-internet-excerpt",
+      "title": "政府電子調達（GEPS）操作マニュアル（インターネット版。令和8年6月）",
+      "publisher": "デジタル庁（調達ポータル）",
+      "domain": "Business",
+      "pages": 7,
+      "source_url": "https://www.p-portal.go.jp/pps-web-biz/manuals",
+      "license": {
+        "name": "調達ポータルの利用条件（政府標準利用規約（第2.0版）準拠）。CC BY 4.0 互換",
+        "url": "https://www.p-portal.go.jp/pps-web-biz/resources/app/html/sitepolicy.html"
+      },
+      "attribution": "「政府電子調達（GEPS）操作マニュアル」（デジタル庁）https://www.p-portal.go.jp/pps-web-biz/manuals を加工して作成（該当ページの抜粋）",
+      "features": [
+        "numbered-heading",
+        "bullet-list",
+        "procedure-list",
+        "simple-table",
+        "screenshot"
+      ],
+      "excerpt_note": "原本 81 ページのうち p13・p17〜p22（PDF 上の物理ページ番号）を抜粋（ページ順は原本どおり）",
+      "notes": []
+    },
+    {
+      "stem": "jacn-29-0039-katakana-transliteration-2025",
+      "title": "Transformerモデルを用いた人名のアルファベット–カタカナ表記変換手法（学術情報処理研究 Vol. 29, No. 1, pp. 199-206, 2025. DOI: 10.24669/jacn.29_0039）",
+      "publisher": "大学ICT推進協議会（AXIES）／学術情報処理研究編集委員会",
+      "domain": "Academic",
+      "pages": 8,
+      "source_url": "https://www.jstage.jst.go.jp/article/jacn/29/1/29_0039/_article/-char/ja",
+      "license": {
+        "name": "CC BY 4.0",
+        "url": "https://creativecommons.org/licenses/by/4.0/deed.ja"
+      },
+      "attribution": "廣森 聡仁, 鎗水 徹「Transformerモデルを用いた人名のアルファベット–カタカナ表記変換手法」学術情報処理研究 Vol. 29, No. 1, pp. 199-206, 2025, DOI: 10.24669/jacn.29_0039 （CC BY 4.0, https://creativecommons.org/licenses/by/4.0/deed.ja ）",
+      "features": [
+        "two-column",
+        "table-caption",
+        "simple-table",
+        "references",
+        "running-header",
+        "encrypted"
+      ],
+      "excerpt_note": "抜粋なし（原本をそのまま使用）",
+      "notes": [
+        "PDF は AES-256 で暗号化されている（ユーザーパスワード無し）。pdf2json はこの暗号化方式に未対応で失敗する（unsupported encryption algorithm）"
+      ]
+    },
+    {
+      "stem": "jsda-9-3-e15-oais-information-package-2025-excerpt",
+      "title": "デジタル資料の長期保存のためのOAIS参照モデルによる情報パッケージの作成：東京大学史料編纂所を事例に（デジタルアーカイブ学会誌 Vol. 9, No. 3, pp. e15-e24, 2025. DOI: 10.24506/jsda.9.3_e15）",
+      "publisher": "デジタルアーカイブ学会",
+      "domain": "Academic",
+      "pages": 4,
+      "source_url": "https://www.jstage.jst.go.jp/article/jsda/9/3/9_e15/_article/-char/ja",
+      "license": {
+        "name": "CC BY 4.0",
+        "url": "https://creativecommons.org/licenses/by/4.0/deed.ja"
+      },
+      "attribution": "金 甫榮, 中村 覚, 山田 太造, 渡邉 英徳「デジタル資料の長期保存のためのOAIS参照モデルによる情報パッケージの作成：東京大学史料編纂所を事例に」デジタルアーカイブ学会誌 Vol. 9, No. 3, pp. e15-e24, 2025, DOI: 10.24506/jsda.9.3_e15 （CC BY 4.0, https://creativecommons.org/licenses/by/4.0/deed.ja ）を加工して作成（該当ページの抜粋）",
+      "features": [
+        "two-column",
+        "figure-caption",
+        "vector-figure",
+        "endnote",
+        "table-caption",
+        "merged-cell",
+        "hierarchical-row",
+        "superscript-citation",
+        "references",
+        "running-header",
+        "hidden-text"
+      ],
+      "excerpt_note": "原本 10 ページのうち p1・p3・p9・p10（紙面のノンブルでは e15・e17・e23・e24）を抜粋（ページ順は原本どおり）",
+      "notes": []
+    },
+    {
+      "stem": "kanpo-20261020-h1811-excerpt",
+      "title": "官報 令和8年10月20日（火曜日）本紙 第1811号 のうち 1 頁（目次）・2 頁（規則・法規的告示）・6 頁（その他告示）",
+      "publisher": "内閣府（官報の発行。原稿作成は独立行政法人国立印刷局）",
+      "domain": "Government",
+      "pages": 3,
+      "source_url": "https://www.kanpo.go.jp/20261020/20261020h01811/20261020h018110000f.html",
+      "license": {
+        "name": "公共データ利用規約（第1.0版）（PDL1.0）。CC BY 4.0 互換",
+        "url": "https://www.digital.go.jp/resources/open_data/public_data_license_v1.0"
+      },
+      "attribution": "「官報 令和8年10月20日 本紙 第1811号」（官報発行サイト）（https://www.kanpo.go.jp/20261020/20261020h01811/20261020h018110000f.html ）を加工して作成（1・2・6 頁の抜粋。2026年10月20日に利用）",
+      "features": [
+        "vertical-writing",
+        "multi-band",
+        "toc",
+        "amendment-table",
+        "nested-table",
+        "table-across-bands",
+        "warichu",
+        "fullwidth-latin-upright",
+        "underline-glyphs",
+        "unmapped-glyphs",
+        "vertical-punctuation",
+        "running-header"
+      ],
+      "excerpt_note": "原本 32 頁のうち p1・p2・p6 を抜粋。抜粋に伴い電子署名・タイムスタンプのフィールドを除いたため、抜粋版は官報の真正性を示すものではない",
+      "notes": [
+        "利用条件: 官報発行サイト「ご利用に当たって」 https://www.kanpo.go.jp/guidance.html",
+        "官報発行サイトで官報全体を閲覧できるのは発行から原則 90 日間のため、出典 URL は 2027 年 1 月ごろに使えなくなる見込み",
+        "markitdown の JNF は run ごとに揺れる（#267。pdfminer の縦書きの順序の非決定性）。Total は変わらない"
+      ]
+    },
+    {
+      "stem": "mof-budget-summary-fy2026",
+      "title": "令和8年度一般会計歳入歳出概算（予算のポイント）（令和7年12月26日）",
+      "publisher": "財務省",
+      "domain": "Government",
+      "pages": 3,
+      "source_url": "https://www.mof.go.jp/policy/budget/budger_workflow/budget/fy2026/seifuan2026/03.pdf",
+      "license": {
+        "name": "公共データ利用規約（第1.0版）（PDL1.0）。CC BY 4.0 互換",
+        "url": "https://www.digital.go.jp/resources/open_data/public_data_license_v1.0"
+      },
+      "attribution": "「令和8年度一般会計歳入歳出概算」（財務省）https://www.mof.go.jp/policy/budget/budger_workflow/budget/fy2026/seifuan2026/03.pdf",
+      "features": [
+        "hierarchical-row",
+        "multi-level-header",
+        "negative-triangle"
+      ],
+      "excerpt_note": "抜粋なし（原本をそのまま使用）",
+      "notes": [
+        "利用条件: 財務省ウェブサイトの利用条件 https://www.mof.go.jp/about_mof/notice/index.html"
+      ]
+    },
+    {
+      "stem": "mof-financial-statements-fy2024-excerpt",
+      "title": "令和6年度『国の財務書類』のポイント",
+      "publisher": "財務省",
+      "domain": "Financial",
+      "pages": 4,
+      "source_url": "https://www.mof.go.jp/policy/budget/report/public_finance_fact_sheet/fy2024/index.html",
+      "license": {
+        "name": "公共データ利用規約（第1.0版）（PDL1.0）。CC BY 4.0 互換",
+        "url": "https://www.digital.go.jp/resources/open_data/public_data_license_v1.0"
+      },
+      "attribution": "「令和6年度『国の財務書類』のポイント」（財務省）https://www.mof.go.jp/policy/budget/report/public_finance_fact_sheet/fy2024/point.pdf を加工して作成（該当ページの抜粋）",
+      "features": [
+        "merged-cell",
+        "multi-level-header",
+        "negative-triangle"
+      ],
+      "excerpt_note": "原本 32 ページのうち p4・p12・p13・p27 を抜粋（ページ順は原本どおり）",
+      "notes": [
+        "利用条件: 財務省ウェブサイトの利用条件 https://www.mof.go.jp/about_mof/notice/index.html"
+      ]
+    },
+    {
+      "stem": "nta-salary-payment-office-notification-example-2024",
+      "title": "給与支払事務所等の開設・移転・廃止届出書（記載例）",
+      "publisher": "国税庁（福岡国税局）",
+      "domain": "Form",
+      "pages": 1,
+      "source_url": "https://www.nta.go.jp/about/organization/fukuoka/topics/teishutsu/index.htm",
+      "license": {
+        "name": "公共データ利用規約（第1.0版）（PDL1.0）。CC BY 4.0 互換",
+        "url": "https://www.digital.go.jp/resources/open_data/public_data_license_v1.0"
+      },
+      "attribution": "出典：国税庁ホームページ（https://www.nta.go.jp/about/organization/fukuoka/topics/teishutsu/index.htm ）「給与支払事務所等の開設・移転・廃止届出書（記載例）」",
+      "features": [
+        "form",
+        "label-value-grid",
+        "checkbox",
+        "fill-in-blank",
+        "digit-box",
+        "merged-cell",
+        "diagonal-empty-cell",
+        "vertical-label",
+        "callout",
+        "hidden-text",
+        "image-stamp",
+        "encrypted"
+      ],
+      "excerpt_note": "抜粋なし（原本をそのまま使用）",
+      "notes": [
+        "利用条件: 国税庁ホームページ「利用規約・免責事項・著作権」 https://www.nta.go.jp/chuijiko/copy.htm",
+        "記載例の値（法人名・法人番号・所在地・氏名）は架空のもの"
+      ]
+    },
+    {
+      "stem": "stat-go-jp-children-population-2026-scan",
+      "title": "統計トピックス No.148「我が国のこどもの数 －「こどもの日」にちなんで－」（令和8年5月4日）を画像化したもの",
+      "publisher": "総務省統計局",
+      "domain": "Scan",
+      "pages": 6,
+      "source_url": "https://www.stat.go.jp/data/jinsui/topics/topi1480.html",
+      "license": {
+        "name": "公共データ利用規約（第1.0版）（PDL1.0）。CC BY 4.0 互換",
+        "url": "https://www.digital.go.jp/resources/open_data/public_data_license_v1.0"
+      },
+      "attribution": "「我が国のこどもの数」（総務省統計局）https://www.stat.go.jp/data/jinsui/topics/topi1480.html を加工して作成（全ページを画像化）",
+      "features": [
+        "scan",
+        "simple-table",
+        "multi-level-header"
+      ],
+      "excerpt_note": "原本の全 6 ページを 200dpi のグレースケール画像に変換（テキスト層なし）",
+      "notes": [
+        "利用条件: 総務省統計局ホームページの利用規約 https://www.stat.go.jp/info/riyou.html",
+        "stat-go-jp-children-population-2026 と同じ内容を画像化したもの"
+      ]
+    },
+    {
+      "stem": "stat-go-jp-children-population-2026",
+      "title": "統計トピックス No.148「我が国のこどもの数 －「こどもの日」にちなんで－」（令和8年5月4日）",
+      "publisher": "総務省統計局",
+      "domain": "Government",
+      "pages": 6,
+      "source_url": "https://www.stat.go.jp/data/jinsui/topics/topi1480.html",
+      "license": {
+        "name": "公共データ利用規約（第1.0版）（PDL1.0）。CC BY 4.0 互換",
+        "url": "https://www.digital.go.jp/resources/open_data/public_data_license_v1.0"
+      },
+      "attribution": "「我が国のこどもの数」（総務省統計局）https://www.stat.go.jp/data/jinsui/topics/topi1480.html",
+      "features": [
+        "simple-table",
+        "multi-level-header"
+      ],
+      "excerpt_note": "抜粋なし（原本をそのまま使用）",
+      "notes": [
+        "利用条件: 総務省統計局ホームページの利用規約 https://www.stat.go.jp/info/riyou.html"
+      ]
+    }
+  ]
+}
