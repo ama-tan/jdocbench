@@ -9,6 +9,7 @@
 
 import html
 from collections.abc import Mapping
+from string import Formatter
 
 from jdocbench.summary import (
     _JNF_DIGITS,
@@ -63,6 +64,64 @@ _DESCRIPTION = (
     "日本語表記の忠実度（JNF）・計算コスト（Wall・Peak RSS）を同じ条件で実測して比べる"
     "ベンチマークです。このサイトには計測した数値だけを載せ、評価に使った PDF・抽出テキスト・"
     "Ground Truth は載せません。原本は各文書ページの出典 URL から入手できます。"
+)
+_MISSING_NOTE = (
+    "は値が無いこと（パーサーの失敗・未導入・対象外、"
+    "または Ground Truth が無く DSQS-JP を計算していないこと）を表します。"
+)
+_NOTES = (
+    "ROA は Total に入れた値です。Ground Truth の行の対応率が 0.15 未満、"
+    "または対応する行が無い文書では 0 として数えます。",
+    "JNF（日本語表記の忠実度）は Total に入れない別の指標です。",
+    "YomiToku は非商用ライセンス（CC BY-NC-SA 4.0）のため、結果を載せていません。",
+)
+_NO_TEXT_NOTE = (
+    "原本（PDF）は出典 URL から入手してください。このページには数値だけを載せ、"
+    "ページ画像・抽出テキスト・Ground Truth は載せていません。"
+)
+# 値を埋め込む固定文（{} の中身は数値・documents.json の値・アダプタ名）
+_RUN_NOTE = "数値はすべて run {run_id}（計測日 {measured_at}）の値です。"
+_BEST_TOTAL = "{total}（{names}）"
+_BREAKDOWN_ITEM = "{value}（{count} 文書）"
+_RAM_GIB = "{gib:.1f} GiB"
+_DOCUMENT_TITLE = "{title} - JDocBench"
+_REPO_LINK = "公開リポジトリ: {link}"
+_ARTICLE_LINK = "記事: {link}"
+_LICENSE = "{name}（{link}）"
+_INDEX_TITLE = "JDocBench 計測結果"
+_MEAN_HEADING = "Parser 平均（Ground Truth のある文書のみ）"
+_DOC_COLUMNS = ("文書", "ドメイン", "ページ数", "構造特性", "最良 Total")
+# 文書ページの見出しやラベルなど、本文にそのまま出す固定の文言
+_LABELS = (
+    "run_id",
+    "run",
+    "計測日",
+    "コミット",
+    "tool SHA",
+    "CPU",
+    "RAM",
+    "GPU",
+    "なし",
+    "Python",
+    "jdocbench",
+    "計測条件",
+    "DSQS Total",
+    "Document",
+    "注記",
+    "発行元",
+    "出典 URL",
+    "ライセンス",
+    "出典表示",
+    "抜粋",
+    "Ground Truth の版",
+    "Platform",
+    "計測日時",
+    "一覧へ戻る",
+    "パーサーごとの結果",
+    "計測環境",
+    "共通の注記",
+    " / ",
+    "、",
 )
 
 
@@ -166,7 +225,7 @@ def _best_total(doc: Mapping) -> str:
         return _MISSING
     best = max(totals.values())
     names = " / ".join(name for name, total in totals.items() if total == best)
-    return f"{_round(best, _TOTAL_DIGITS)}（{_esc(names)}）"
+    return _BEST_TOTAL.format(total=_round(best, _TOTAL_DIGITS), names=_esc(names))
 
 
 def _breakdown(values: list[str]) -> str:
@@ -176,13 +235,15 @@ def _breakdown(values: list[str]) -> str:
         counts[value] = counts.get(value, 0) + 1
     if len(counts) <= 1:
         return _esc(values[0]) if values else _MISSING
-    return "、".join(f"{_esc(value)}（{count} 文書）" for value, count in counts.items())
+    return "、".join(
+        _BREAKDOWN_ITEM.format(value=_esc(value), count=count) for value, count in counts.items()
+    )
 
 
 def _ram(value: object) -> str:
     """RAM のバイト数を GiB 1 桁にする。"""
     if isinstance(value, int | float) and not isinstance(value, bool):
-        return f"{value / _GIB:.1f} GiB"
+        return _RAM_GIB.format(gib=value / _GIB)
     return _MISSING
 
 
@@ -193,14 +254,11 @@ def _run_text(doc: Mapping, key: str) -> str:
 
 def _fixed_notes(source: Mapping) -> list[str]:
     return [
-        "<code>-</code> は値が無いこと（パーサーの失敗・未導入・対象外、"
-        "または Ground Truth が無く DSQS-JP を計算していないこと）を表します。",
-        "ROA は Total に入れた値です。Ground Truth の行の対応率が 0.15 未満、"
-        "または対応する行が無い文書では 0 として数えます。",
-        "JNF（日本語表記の忠実度）は Total に入れない別の指標です。",
-        "YomiToku は非商用ライセンス（CC BY-NC-SA 4.0）のため、結果を載せていません。",
-        f"数値はすべて run {_esc(source.get('run_id'))}"
-        f"（計測日 {_esc(source.get('measured_at'))}）の値です。",
+        f"<code>{_MISSING}</code> {_esc(_MISSING_NOTE)}",
+        *map(_esc, _NOTES),
+        _RUN_NOTE.format(
+            run_id=_esc(source.get("run_id")), measured_at=_esc(source.get("measured_at"))
+        ),
     ]
 
 
@@ -211,9 +269,10 @@ def render_index(data: Mapping, meta: Mapping) -> str:
     source = _dict(meta.get("source"))
     names = _adapter_names(documents)
 
-    links = [f"公開リポジトリ: {_link(source.get('repo_url'), source.get('repo_url'))}"]
+    links = [_REPO_LINK.format(link=_link(source.get("repo_url"), source.get("repo_url")))]
     if source.get("article_url"):
-        links.append(f"記事: {_link(source.get('article_url'), source.get('article_url'))}")
+        article = _link(source.get("article_url"), source.get("article_url"))
+        links.append(_ARTICLE_LINK.format(link=article))
 
     conditions = [("run_id", _esc(source.get("run_id")))]
     if source.get("run_url"):
@@ -260,7 +319,7 @@ def render_index(data: Mapping, meta: Mapping) -> str:
             mean_rows.append([(_esc(name), False)] + [(value, True) for value in values])
 
     body = [
-        "<h1>JDocBench 計測結果</h1>",
+        f"<h1>{_esc(_INDEX_TITLE)}</h1>",
         f"<p>{_esc(_DESCRIPTION)}</p>",
         _ul(links),
         "<h2>計測条件</h2>",
@@ -270,18 +329,18 @@ def render_index(data: Mapping, meta: Mapping) -> str:
         body.append(_ul(notes))
     body += [
         "<h2>文書</h2>",
-        _table(("文書", "ドメイン", "ページ数", "構造特性", "最良 Total"), doc_rows),
+        _table(_DOC_COLUMNS, doc_rows),
         "<h2>DSQS Total</h2>",
         _table(("Document", *names), total_rows),
     ]
     if mean_rows:
         body += [
-            "<h2>Parser 平均（Ground Truth のある文書のみ）</h2>",
+            f"<h2>{_esc(_MEAN_HEADING)}</h2>",
             _table(_MEAN_COLUMNS, mean_rows),
             f'<p class="note">{_esc(_MEAN_NOTE.strip())}</p>',
         ]
     body += ["<h2>注記</h2>", _ul(_fixed_notes(source))]
-    return _page("JDocBench 計測結果", "\n".join(body))
+    return _page(_INDEX_TITLE, "\n".join(body))
 
 
 def render_document(doc: Mapping, info: Mapping, source: Mapping) -> str:
@@ -293,7 +352,10 @@ def render_document(doc: Mapping, info: Mapping, source: Mapping) -> str:
         ("出典 URL", _link(info.get("source_url"), info.get("source_url"))),
         (
             "ライセンス",
-            f"{_esc(license_.get('name'))}（{_link(license_.get('url'), license_.get('url'))}）",
+            _LICENSE.format(
+                name=_esc(license_.get("name")),
+                link=_link(license_.get("url"), license_.get("url")),
+            ),
         ),
         ("出典表示", _esc(info.get("attribution"))),
         ("ドメイン", _esc(info.get("domain"))),
@@ -337,12 +399,11 @@ def render_document(doc: Mapping, info: Mapping, source: Mapping) -> str:
     if notes := [_esc(note) for note in _list(info.get("notes"))]:
         body += ["<h2>注記</h2>", _ul(notes)]
     body += [
-        "<p>原本（PDF）は出典 URL から入手してください。このページには数値だけを載せ、"
-        "ページ画像・抽出テキスト・Ground Truth は載せていません。</p>",
+        f"<p>{_esc(_NO_TEXT_NOTE)}</p>",
         "<h2>共通の注記</h2>",
         _ul(_fixed_notes(source)),
     ]
-    return _page(f"{info.get('title')} - JDocBench", "\n".join(body))
+    return _page(_DOCUMENT_TITLE.format(title=info.get("title")), "\n".join(body))
 
 
 def _stems(documents: list[Mapping], label: str) -> list[str]:
@@ -384,3 +445,41 @@ def build_site(data: Mapping, meta: Mapping) -> dict[str, str]:
     for stem, doc in zip(data_stems, documents, strict=True):
         pages[f"documents/{stem}.html"] = render_document(doc, by_stem[stem], source)
     return pages
+
+
+def _fragments(template: str) -> list[str]:
+    """値を埋め込む固定文から、固定の部分（{} の外側）だけを取り出す。"""
+    return [literal for literal, _, _, _ in Formatter().parse(template) if literal]
+
+
+# HTML の本文に出る固定の文言の一覧（流出ガードのテキスト出所テストが使う。jdoc-bench#271）。
+# 本文に新しい文言を足すときは、ここにも足さないと tests/test_sitehtml.py が落ちる
+FIXED_TEXTS = frozenset(
+    {
+        _DESCRIPTION,
+        _MISSING_NOTE,
+        *_NOTES,
+        _NO_TEXT_NOTE,
+        _MEAN_NOTE.strip(),
+        _INDEX_TITLE,
+        _MEAN_HEADING,
+        *_DOC_COLUMNS,
+        *_ADAPTER_COLUMNS,
+        *_MEAN_COLUMNS,
+        *_LABELS,
+        *(
+            fragment
+            for template in (
+                _RUN_NOTE,
+                _BEST_TOTAL,
+                _BREAKDOWN_ITEM,
+                _RAM_GIB,
+                _DOCUMENT_TITLE,
+                _REPO_LINK,
+                _ARTICLE_LINK,
+                _LICENSE,
+            )
+            for fragment in _fragments(template)
+        ),
+    }
+)
